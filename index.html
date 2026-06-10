@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rogernort — Wander Further. Live Deeper.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f8f8f6;
+      color: #141414;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    img { display: block; max-width: 100%; }
+    a { text-decoration: none; color: inherit; }
+    button { font-family: inherit; cursor: pointer; }
+
+    :root {
+      --ink:     #141414;
+      --ink-2:   #404040;
+      --ink-3:   #888;
+      --bg:      #f8f8f6;
+      --white:   #ffffff;
+      --border:  #e4e4e0;
+      --dark:    #0c0c0a;
+      --gold:    #c8922a;
+      --gold-l:  #e0a93a;
+      --gold-bg: rgba(200,146,42,.1);
+      --ease:    cubic-bezier(.4,0,.2,1);
+      --ease-out: cubic-bezier(0,.55,.45,1);
+    }
+
+    /* ─── NAV ─── */
+    .nav {
+      position: fixed;
+      top: 20px; left: 20px; right: 20px;
+      z-index: 900;
+      display: flex;
+      align-items: center;
+      padding: 14px 22px;
+      border-radius: 18px;
+      transition: background .3s var(--ease), backdrop-filter .3s, box-shadow .3s;
+    }
+    .nav.scrolled {
+      background: rgba(255,255,255,.88);
+      backdrop-filter: blur(24px) saturate(160%);
+      -webkit-backdrop-filter: blur(24px) saturate(160%);
+      box-shadow: 0 4px 32px rgba(0,0,0,.08), 0 1px 0 rgba(255,255,255,.6) inset;
+      border: 1px solid rgba(255,255,255,.7);
+    }
+    .nav.over-hero:not(.scrolled) {
+      background: rgba(12,12,10,.3);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,.1);
+    }
+    .logo-wrap {
+      display: flex; align-items: center; gap: 10px;
+      margin-right: auto;
+    }
+    .logo-icon {
+      width: 34px; height: 34px;
+      background: var(--gold);
+      border-radius: 9px;
+      display: grid; place-items: center;
+    }
+    .logo-icon svg { width: 17px; height: 17px; color: #fff; }
+    .logo-name {
+      font-size: .95rem; font-weight: 700;
+      letter-spacing: -.2px; color: var(--white);
+      transition: color .25s;
+    }
+    .nav.scrolled .logo-name { color: var(--ink); }
+
+    .nav-links {
+      display: flex; align-items: center; gap: 2px;
+      list-style: none; margin-right: 12px;
+    }
+    .nav-links a {
+      font-size: .83rem; font-weight: 500;
+      color: rgba(255,255,255,.75);
+      padding: 7px 13px; border-radius: 8px;
+      transition: color .2s, background .2s;
+    }
+    .nav-links a:hover { color: #fff; background: rgba(255,255,255,.1); }
+    .nav.scrolled .nav-links a { color: var(--ink-2); }
+    .nav.scrolled .nav-links a:hover { color: var(--ink); background: #f0f0ee; }
+
+    .nav-btn {
+      font-size: .82rem; font-weight: 700;
+      padding: 9px 20px; border-radius: 9px; border: none;
+      background: var(--gold); color: #fff;
+      transition: background .2s, transform .2s, box-shadow .2s;
+      display: inline-block;
+    }
+    .nav-btn:hover { background: var(--gold-l); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(200,146,42,.4); }
+
+    .burger {
+      display: none; flex-direction: column; gap: 5px;
+      background: none; border: none; padding: 4px; cursor: pointer;
+    }
+    .burger span {
+      display: block; width: 22px; height: 2px;
+      background: #fff; border-radius: 2px; transition: all .3s;
+    }
+    .nav.scrolled .burger span { background: var(--ink); }
+    .burger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .burger.open span:nth-child(2) { opacity: 0; }
+    .burger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    .drawer {
+      position: fixed;
+      top: 78px; left: 20px; right: 20px;
+      background: var(--white);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 60px rgba(0,0,0,.12);
+      padding: 14px;
+      z-index: 899;
+      display: none;
+    }
+    .drawer.open { display: block; }
+    .drawer a {
+      display: block; padding: 12px 16px;
+      font-size: .9rem; font-weight: 500; color: var(--ink-2);
+      border-radius: 9px; transition: background .15s;
+    }
+    .drawer a:hover { background: #f3f3f0; }
+    .drawer .nav-btn { display: block; text-align: center; margin-top: 10px; }
+
+    /* ─── HERO ─── */
+    .hero {
+      position: relative;
+      height: 100svh;
+      min-height: 600px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute; inset: 0;
+      background: url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1920&q=85') center/cover no-repeat;
+      transform: scale(1.06);
+      transition: transform 9s cubic-bezier(.25,.46,.45,.94);
+    }
+    .hero-bg.ready { transform: scale(1); }
+    .hero-dim {
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(12,12,10,.55) 0%, rgba(12,12,10,.48) 100%);
+    }
+    .hero-content {
+      position: relative; z-index: 2;
+      text-align: center;
+      padding: 0 24px;
+      max-width: 860px;
+      width: 100%;
+    }
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid rgba(255,255,255,.3);
+      background: rgba(255,255,255,.1);
+      backdrop-filter: blur(8px);
+      color: rgba(255,255,255,.9);
+      font-size: .72rem; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase;
+      padding: 7px 16px; border-radius: 100px;
+      margin-bottom: 28px;
+    }
+    .hero-tag span {
+      width: 5px; height: 5px;
+      background: var(--gold-l); border-radius: 50%;
+      display: inline-block;
+    }
+    .hero-h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3.4rem, 8vw, 7rem);
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.0;
+      letter-spacing: -.03em;
+      margin-bottom: 22px;
+    }
+    .hero-h1 i { font-style: italic; color: var(--gold-l); }
+    .hero-p {
+      font-size: clamp(.95rem, 1.8vw, 1.1rem);
+      color: rgba(255,255,255,.68);
+      line-height: 1.8;
+      max-width: 480px;
+      margin: 0 auto 38px;
+    }
+    .hero-btns {
+      display: flex; align-items: center;
+      justify-content: center; gap: 12px; flex-wrap: wrap;
+    }
+    .btn-fill {
+      background: var(--gold); color: #fff;
+      font-size: .9rem; font-weight: 700;
+      padding: 14px 30px; border-radius: 12px; border: none;
+      display: inline-flex; align-items: center; gap: 8px;
+      transition: background .2s, transform .2s, box-shadow .2s;
+    }
+    .btn-fill:hover { background: var(--gold-l); transform: translateY(-2px); box-shadow: 0 12px 30px rgba(200,146,42,.45); }
+    .btn-stroke {
+      background: transparent; color: #fff;
+      font-size: .9rem; font-weight: 600;
+      padding: 14px 30px; border-radius: 12px;
+      border: 1.5px solid rgba(255,255,255,.35);
+      display: inline-flex; align-items: center; gap: 8px;
+      backdrop-filter: blur(8px);
+      transition: border-color .2s, background .2s;
+    }
+    .btn-stroke:hover { border-color: rgba(255,255,255,.7); background: rgba(255,255,255,.1); }
+
+    /* Scroll cue */
+    .scroll-cue {
+      position: absolute; bottom: 32px; left: 50%;
+      transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      color: rgba(255,255,255,.45); font-size: .68rem;
+      font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+      z-index: 2; animation: nudge 2.2s ease-in-out infinite;
+    }
+    .scroll-cue svg { width: 18px; height: 18px; }
+    @keyframes nudge {
+      0%,100% { transform: translateX(-50%) translateY(0); }
+      50%      { transform: translateX(-50%) translateY(7px); }
+    }
+
+    /* ─── SEARCH BAR ─── */
+    .search-wrap {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 0 40px;
+    }
+    .search-inner {
+      max-width: 1160px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 0; align-items: stretch;
+    }
+    .sf {
+      padding: 20px 24px; border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .sf:last-of-type { border-right: none; }
+    .sf label {
+      font-size: .68rem; font-weight: 700;
+      letter-spacing: 1.2px; text-transform: uppercase;
+      color: var(--ink-3);
+    }
+    .sf input, .sf select {
+      border: none; outline: none; background: none;
+      font-family: inherit; font-size: .9rem;
+      font-weight: 500; color: var(--ink);
+      padding: 0; width: 100%;
+    }
+    .sf input::placeholder { color: #b0b0aa; font-weight: 400; }
+    .sf select option { background: #fff; }
+    .search-btn {
+      padding: 0 30px; background: var(--dark); color: #fff;
+      font-size: .85rem; font-weight: 700;
+      border: none; display: flex; align-items: center; gap: 8px;
+      transition: background .2s;
+    }
+    .search-btn:hover { background: var(--ink-2); }
+
+    /* ─── SECTIONS ─── */
+    .section { padding: 100px 40px; }
+    .wrap { max-width: 1160px; margin: 0 auto; }
+
+    .label {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: .7rem; font-weight: 700;
+      letter-spacing: 2.5px; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 14px;
+    }
+    .label::before {
+      content: ''; width: 20px; height: 1.5px;
+      background: var(--gold); border-radius: 2px;
+    }
+    h2.display {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.2rem, 4.5vw, 3.6rem);
+      font-weight: 700; line-height: 1.08;
+      letter-spacing: -.03em; color: var(--ink);
+      margin-bottom: 18px;
+    }
+    h2.display.light { color: #fff; }
+    .body-text {
+      font-size: .98rem; color: var(--ink-3);
+      line-height: 1.8; max-width: 500px;
+    }
+    .body-text.light { color: rgba(255,255,255,.5); }
+
+    /* ─── PILLARS ─── */
+    .pillars-bg { background: var(--white); }
+    .pillars-grid {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 2px;
+      background: var(--border); border: 1px solid var(--border);
+      border-radius: 20px; overflow: hidden; margin-top: 64px;
+    }
+    .pillar {
+      background: var(--white); padding: 44px 40px;
+      transition: background .25s;
+    }
+    .pillar:hover { background: #fafaf8; }
+    .pillar-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3.6rem; font-weight: 700;
+      color: var(--border); line-height: 1;
+      margin-bottom: 20px; letter-spacing: -.04em;
+    }
+    .pillar h3 {
+      font-size: 1.08rem; font-weight: 700;
+      color: var(--ink); margin-bottom: 12px;
+    }
+    .pillar p { font-size: .88rem; color: var(--ink-3); line-height: 1.8; }
+    .pillar-icon {
+      width: 46px; height: 46px;
+      background: var(--gold-bg); border-radius: 12px;
+      display: grid; place-items: center;
+      margin-bottom: 22px; transition: background .25s;
+    }
+    .pillar-icon svg { width: 22px; height: 22px; color: var(--gold); }
+    .pillar:hover .pillar-icon { background: var(--gold); }
+    .pillar:hover .pillar-icon svg { color: #fff; }
+
+    /* ─── DESTINATIONS ─── */
+    .dest-bg { background: var(--bg); }
+    .dest-row {
+      display: flex; align-items: flex-end;
+      justify-content: space-between; gap: 24px;
+      flex-wrap: wrap; margin-bottom: 48px;
+    }
+    .btn-line {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: .85rem; font-weight: 600; color: var(--ink-2);
+      padding: 10px 20px; border-radius: 10px;
+      border: 1.5px solid var(--border);
+      transition: border-color .2s, color .2s, background .2s;
+    }
+    .btn-line:hover { border-color: var(--ink); color: var(--ink); background: var(--white); }
+    .btn-line svg { width: 14px; height: 14px; }
+
+    /* Mosaic */
+    .mosaic {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-template-rows: 290px 230px;
+      gap: 14px;
+    }
+    .card { position: relative; border-radius: 18px; overflow: hidden; display: block; }
+    .card:nth-child(1) { grid-column: 1/6; grid-row: 1/3; }
+    .card:nth-child(2) { grid-column: 6/9; grid-row: 1/2; }
+    .card:nth-child(3) { grid-column: 9/13; grid-row: 1/2; }
+    .card:nth-child(4) { grid-column: 6/9; grid-row: 2/3; }
+    .card:nth-child(5) { grid-column: 9/11; grid-row: 2/3; }
+    .card:nth-child(6) { grid-column: 11/13; grid-row: 2/3; }
+
+    .card img {
+      width: 100%; height: 100%; object-fit: cover;
+      transition: transform .6s var(--ease);
+    }
+    .card:hover img { transform: scale(1.07); }
+    .card-shade {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(12,12,10,.86) 0%, transparent 52%);
+    }
+    .card-chip {
+      position: absolute; top: 14px; left: 14px;
+      font-size: .68rem; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; padding: 5px 12px; border-radius: 100px;
+    }
+    .chip-gold { background: var(--gold); color: #fff; }
+    .chip-glass {
+      background: rgba(255,255,255,.15);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,.25);
+      color: #fff;
+    }
+    .card-body {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 20px 20px 18px;
+    }
+    .card-region { font-size: .7rem; font-weight: 600; color: rgba(255,255,255,.5); margin-bottom: 4px; }
+    .card h3 {
+      font-size: 1.12rem; font-weight: 700; color: #fff;
+      margin-bottom: 10px; transition: color .2s;
+    }
+    .card:hover h3 { color: var(--gold-l); }
+    .card:first-child h3 { font-size: 1.5rem; }
+    .card-foot { display: flex; align-items: center; justify-content: space-between; }
+    .card-price { font-size: .78rem; color: rgba(255,255,255,.5); }
+    .card-price strong { font-size: .98rem; color: var(--gold-l); font-weight: 700; }
+    .card-stars { font-size: .68rem; color: var(--gold-l); letter-spacing: 1.5px; }
+
+    /* ─── STATS ─── */
+    .stats-bg {
+      background: var(--dark);
+      padding: 80px 40px;
+      position: relative; overflow: hidden;
+    }
+    .stats-bg::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1600&q=50') center/cover no-repeat;
+      opacity: .06;
+    }
+    .stats-inner {
+      position: relative; z-index: 1;
+      display: grid; grid-template-columns: repeat(4,1fr);
+      gap: 1px; background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 20px; overflow: hidden;
+    }
+    .stat {
+      padding: 52px 40px; background: var(--dark);
+      text-align: center; transition: background .2s;
+    }
+    .stat:hover { background: rgba(255,255,255,.03); }
+    .stat-n {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.6rem, 5vw, 4rem);
+      font-weight: 700; color: var(--gold-l);
+      letter-spacing: -.04em; line-height: 1;
+      margin-bottom: 10px;
+    }
+    .stat-l { font-size: .82rem; color: rgba(255,255,255,.4); font-weight: 500; }
+
+    /* ─── TESTIMONIALS ─── */
+    .testi-bg { background: var(--white); }
+    .testi-grid {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 20px;
+    }
+    .tc {
+      background: var(--bg); border-radius: 18px;
+      padding: 32px; border: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      transition: transform .3s var(--ease), box-shadow .3s var(--ease);
+    }
+    .tc:hover { transform: translateY(-5px); box-shadow: 0 20px 52px rgba(0,0,0,.09); }
+    .tc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .tc-user { display: flex; align-items: center; gap: 12px; }
+    .tc-ava {
+      width: 44px; height: 44px; border-radius: 50%;
+      object-fit: cover; flex-shrink: 0;
+      border: 2px solid var(--border);
+    }
+    .tc-name { font-size: .88rem; font-weight: 700; color: var(--ink); }
+    .tc-dest { font-size: .75rem; color: var(--ink-3); margin-top: 2px; }
+    .tc-stars { color: var(--gold); font-size: .72rem; letter-spacing: 1px; }
+    .tc-text {
+      font-size: .875rem; color: var(--ink-2);
+      line-height: 1.82; flex: 1;
+    }
+    .tc-text::before {
+      content: '\201C';
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3.6rem; line-height: .45;
+      color: var(--border); display: block;
+      margin-bottom: 12px;
+    }
+    .tc-foot {
+      display: flex; align-items: center; gap: 6px;
+      margin-top: 20px; padding-top: 16px;
+      border-top: 1px solid var(--border);
+      font-size: .72rem; color: var(--ink-3);
+    }
+    .tc-foot svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    /* ─── CTA ─── */
+    .cta-wrap {
+      padding: 0 40px 100px;
+    }
+    .cta-box {
+      background: var(--dark);
+      border-radius: 24px;
+      padding: 80px 72px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-box::before {
+      content: '';
+      position: absolute; top: -100px; right: -100px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(200,146,42,.14) 0%, transparent 65%);
+    }
+    .cta-box::after {
+      content: '';
+      position: absolute; bottom: -80px; left: 160px;
+      width: 280px; height: 280px;
+      background: radial-gradient(circle, rgba(200,146,42,.07) 0%, transparent 65%);
+    }
+    .cta-left { position: relative; z-index: 1; }
+    .cta-right { position: relative; z-index: 1; }
+    .cta-form { display: flex; flex-direction: column; gap: 12px; }
+    .cta-form input {
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 11px; padding: 15px 18px;
+      color: #fff; font-family: inherit; font-size: .9rem;
+      outline: none; transition: border-color .2s, background .2s;
+    }
+    .cta-form input::placeholder { color: rgba(255,255,255,.3); }
+    .cta-form input:focus { border-color: var(--gold); background: rgba(255,255,255,.1); }
+    .cta-form button {
+      background: var(--gold); color: #fff;
+      font-size: .9rem; font-weight: 700;
+      padding: 15px; border-radius: 11px; border: none;
+      transition: background .2s, transform .2s;
+    }
+    .cta-form button:hover { background: var(--gold-l); transform: translateY(-1px); }
+    .cta-note { font-size: .73rem; color: rgba(255,255,255,.3); margin-top: 4px; text-align: center; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: #080806;
+      padding: 80px 40px 0;
+    }
+    .foot-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1.5fr;
+      gap: 56px;
+      max-width: 1160px; margin: 0 auto;
+      padding-bottom: 60px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .foot-about p {
+      font-size: .85rem; color: rgba(255,255,255,.38);
+      line-height: 1.85; margin: 16px 0 26px;
+    }
+    .foot-socials { display: flex; gap: 8px; }
+    .foot-soc {
+      width: 36px; height: 36px; border-radius: 9px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.08);
+      display: grid; place-items: center;
+      transition: background .2s, border-color .2s;
+    }
+    .foot-soc svg { width: 15px; height: 15px; color: rgba(255,255,255,.45); transition: color .2s; }
+    .foot-soc:hover { background: var(--gold); border-color: var(--gold); }
+    .foot-soc:hover svg { color: #fff; }
+
+    .foot-col h4 {
+      font-size: .72rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: rgba(255,255,255,.35); margin-bottom: 20px;
+    }
+    .foot-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .foot-links a {
+      font-size: .86rem; color: rgba(255,255,255,.45);
+      transition: color .2s;
+    }
+    .foot-links a:hover { color: var(--gold-l); }
+
+    .foot-contact { display: flex; flex-direction: column; gap: 14px; }
+    .fci {
+      display: flex; gap: 12px;
+      font-size: .84rem; color: rgba(255,255,255,.4); line-height: 1.65;
+    }
+    .fci svg { width: 15px; height: 15px; color: var(--gold); flex-shrink: 0; margin-top: 2px; }
+
+    .foot-bar {
+      max-width: 1160px; margin: 0 auto;
+      padding: 22px 0;
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    }
+    .foot-bar p { font-size: .78rem; color: rgba(255,255,255,.22); }
+    .foot-bar-links { display: flex; gap: 20px; }
+    .foot-bar-links a { font-size: .78rem; color: rgba(255,255,255,.22); transition: color .2s; }
+    .foot-bar-links a:hover { color: rgba(255,255,255,.55); }
+
+    /* ─── REVEAL ─── */
+    .r {
+      opacity: 0; transform: translateY(22px);
+      transition: opacity .6s var(--ease), transform .6s var(--ease);
+    }
+    .r.d1 { transition-delay: .08s; }
+    .r.d2 { transition-delay: .16s; }
+    .r.d3 { transition-delay: .24s; }
+    .r.d4 { transition-delay: .32s; }
+    .r.in { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) {
+      .r { opacity:1; transform:none; transition:none; }
+      .hero-bg { transition:none; }
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 1060px) {
+      .mosaic { grid-template-rows: 240px 200px; }
+      .foot-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 880px) {
+      .nav-links, .nav-btn.desk { display: none; }
+      .burger { display: flex; }
+      .pillars-grid { grid-template-columns: 1fr; gap: 0; }
+      .mosaic {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto;
+      }
+      .card { grid-column: auto !important; grid-row: auto !important; aspect-ratio: 4/3; }
+      .card:nth-child(1) { grid-column: span 2 !important; aspect-ratio: 16/6; }
+      .stats-inner { grid-template-columns: repeat(2,1fr); }
+      .testi-grid { grid-template-columns: 1fr; }
+      .cta-box { grid-template-columns: 1fr; padding: 52px 40px; gap: 36px; }
+      .section, .stats-bg, .cta-wrap { padding-left: 24px; padding-right: 24px; }
+      .search-wrap { padding: 0 24px; }
+      .search-inner { grid-template-columns: 1fr; }
+      .sf { border-right: none; border-bottom: 1px solid var(--border); padding: 16px 20px; }
+      .search-btn { padding: 16px 20px; justify-content: center; }
+    }
+    @media (max-width: 580px) {
+      .mosaic { grid-template-columns: 1fr; }
+      .card:nth-child(1) { grid-column: 1 !important; aspect-ratio: 4/3; }
+      .stats-inner { grid-template-columns: 1fr 1fr; }
+      .hero-btns { flex-direction: column; }
+      .foot-grid { grid-template-columns: 1fr; gap: 32px; }
+      footer { padding: 60px 24px 0; }
+      .cta-box { padding: 40px 28px; }
+      .cta-wrap { padding: 0 20px 72px; }
+      .nav { top: 12px; left: 12px; right: 12px; }
+    }
+
+    .sr { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  </style>
+</head>
+<body>
+
+  <!-- ══ NAV ══ -->
+  <nav class="nav over-hero" id="nav" role="navigation" aria-label="Main navigation">
+    <div class="logo-wrap">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+          <circle cx="12" cy="9" r="2.5"/>
+        </svg>
+      </div>
+      <span class="logo-name">Rogernort</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#home">Home</a></li>
+      <li><a href="#experiences">Experiences</a></li>
+      <li><a href="#destinations">Destinations</a></li>
+      <li><a href="#stories">Stories</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <a href="#plan" class="nav-btn desk">Plan a Trip</a>
+    <button class="burger" id="burger" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="drawer" id="drawer" aria-hidden="true">
+    <a href="#home">Home</a>
+    <a href="#experiences">Experiences</a>
+    <a href="#destinations">Destinations</a>
+    <a href="#stories">Stories</a>
+    <a href="#contact">Contact</a>
+    <a href="#plan" class="nav-btn">Plan a Trip</a>
+  </div>
+
+  <!-- ══ HERO ══ -->
+  <section id="home" aria-labelledby="hero-h1">
+    <div class="hero">
+      <div class="hero-bg" id="heroBg"></div>
+      <div class="hero-dim"></div>
+      <div class="hero-content">
+        <div class="hero-tag">
+          <span aria-hidden="true"></span>
+          Premium Travel Experiences
+        </div>
+        <h1 class="hero-h1" id="hero-h1">
+          Wander <i>Further.</i><br>Live Deeper.
+        </h1>
+        <p class="hero-p">
+          Step beyond the ordinary. Rogernort crafts bespoke journeys to the world's most extraordinary places — tailored entirely around you.
+        </p>
+        <div class="hero-btns">
+          <a href="#destinations" class="btn-fill">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Explore Destinations
+          </a>
+          <a href="#plan" class="btn-stroke">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Plan My Journey
+          </a>
+        </div>
+      </div>
+      <div class="scroll-cue" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        Scroll
+      </div>
+    </div>
+
+    <!-- Search bar -->
+    <div class="search-wrap">
+      <div class="search-inner">
+        <div class="sf">
+          <label for="s-where">Where to?</label>
+          <input type="text" id="s-where" placeholder="City, country or region" />
+        </div>
+        <div class="sf">
+          <label for="s-depart">Departure</label>
+          <input type="date" id="s-depart" />
+        </div>
+        <div class="sf">
+          <label for="s-guests">Travelers</label>
+          <select id="s-guests" aria-label="Number of travelers">
+            <option>1 Traveler</option>
+            <option>2 Travelers</option>
+            <option>3–4 Travelers</option>
+            <option>Group (5+)</option>
+          </select>
+        </div>
+        <button class="search-btn" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Search
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ PILLARS ══ -->
+  <section class="section pillars-bg" id="experiences" aria-labelledby="pillars-h">
+    <div class="wrap">
+      <div style="max-width:600px;">
+        <div class="label">How We Work</div>
+        <h2 class="display" id="pillars-h">Every Journey,<br>Crafted Just for You</h2>
+        <p class="body-text">We don't sell packages off a shelf. We listen, we design, and we deliver — bespoke travel built around your pace, your passions, and your budget.</p>
+      </div>
+      <div class="pillars-grid">
+        <div class="pillar r d1">
+          <div class="pillar-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <div class="pillar-num">01</div>
+          <h3>Tailor-Made Itineraries</h3>
+          <p>No two travelers are alike. We build your journey from scratch — hand-selecting every hotel, activity, and transfer to match exactly what you're looking for.</p>
+        </div>
+        <div class="pillar r d2">
+          <div class="pillar-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="pillar-num">02</div>
+          <h3>Vetted Local Experts</h3>
+          <p>Our on-the-ground partners are curated, tested, and trusted. From private guides in Kyoto to yacht charters in the Maldives — quality is never compromised.</p>
+        </div>
+        <div class="pillar r d3">
+          <div class="pillar-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div class="pillar-num">03</div>
+          <h3>Zero Stress, All Experience</h3>
+          <p>From the moment you land to the minute you're home, we handle every detail — visas, transfers, reservations — so your only job is to enjoy every second.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ DESTINATIONS ══ -->
+  <section class="section dest-bg" id="destinations" style="padding-top:60px;" aria-labelledby="dest-h">
+    <div class="wrap">
+      <div class="dest-row">
+        <div>
+          <div class="label">Where to Next?</div>
+          <h2 class="display" id="dest-h">Handpicked<br>by Our Experts</h2>
+          <p class="body-text">Six destinations that consistently steal our travelers' hearts — and keep them coming back for more.</p>
+        </div>
+        <a href="#plan" class="btn-line">
+          Browse All Destinations
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+      <div class="mosaic">
+        <a href="#plan" class="card r" aria-label="Maldives">
+          <img src="https://images.unsplash.com/photo-1573843981267-be1999ff37cd?w=800&q=80" alt="Crystal water and overwater bungalows in Maldives" loading="lazy" />
+          <div class="card-shade"></div>
+          <span class="card-chip chip-gold">Top Pick</span>
+          <div class="card-body">
+            <div class="card-region">Indian Ocean</div>
+            <h3>Maldives</h3>
+            <div class="card-foot">
+              <div class="card-price">From <strong>$2,199</strong></div>
+              <div class="card-stars">★★★★★</div>
+            </div>
+          </div>
+        </a>
+        <a href="#plan" class="card r d1" aria-label="Santorini, Greece">
+          <img src="https://images.unsplash.com/photo-1507501336603-6e31db2be093?w=600&q=80" alt="White-washed buildings in Santorini, Greece" loading="lazy" />
+          <div class="card-shade"></div>
+          <div class="card-body">
+            <div class="card-region">Greece</div>
+            <h3>Santorini</h3>
+            <div class="card-foot">
+              <div class="card-price">From <strong>$1,649</strong></div>
+              <div class="card-stars">★★★★★</div>
+            </div>
+          </div>
+        </a>
+        <a href="#plan" class="card r d2" aria-label="Kyoto, Japan">
+          <img src="https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=600&q=80" alt="Traditional temple in Kyoto, Japan" loading="lazy" />
+          <div class="card-shade"></div>
+          <span class="card-chip chip-glass">Trending</span>
+          <div class="card-body">
+            <div class="card-region">Japan</div>
+            <h3>Kyoto</h3>
+            <div class="card-foot">
+              <div class="card-price">From <strong>$1,899</strong></div>
+              <div class="card-stars">★★★★★</div>
+            </div>
+          </div>
+        </a>
+        <a href="#plan" class="card r d1" aria-label="Bali, Indonesia">
+          <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=80" alt="Rice terraces in Bali, Indonesia" loading="lazy" />
+          <div class="card-shade"></div>
+          <div class="card-body">
+            <div class="card-region">Indonesia</div>
+            <h3>Bali</h3>
+            <div class="card-foot">
+              <div class="card-price">From <strong>$1,299</strong></div>
+              <div class="card-stars">★★★★★</div>
+            </div>
+          </div>
+        </a>
+        <a href="#plan" class="card r d2" aria-label="Cape Town, South Africa">
+          <img src="https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=400&q=80" alt="Cape Town waterfront and Table Mountain" loading="lazy" />
+          <div class="card-shade"></div>
+          <div class="card-body">
+            <div class="card-region">South Africa</div>
+            <h3>Cape Town</h3>
+            <div class="card-foot">
+              <div class="card-price">From <strong>$1,499</strong></div>
+              <div class="card-stars">★★★★★</div>
+            </div>
+          </div>
+        </a>
+        <a href="#plan" class="card r d3" aria-label="Machu Picchu, Peru">
+          <img src="https://images.unsplash.com/photo-1587595431973-160d0d94add1?w=400&q=80" alt="Ancient citadel of Machu Picchu in Peru" loading="lazy" />
+          <div class="card-shade"></div>
+          <span class="card-chip chip-glass">New</span>
+          <div class="card-body">
+            <div class="card-region">Peru</div>
+            <h3>Machu Picchu</h3>
+            <div class="card-foot">
+              <div class="card-price">From <strong>$2,049</strong></div>
+              <div class="card-stars">★★★★★</div>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ STATS ══ -->
+  <section class="stats-bg" aria-label="Our numbers">
+    <div class="wrap">
+      <div class="stats-inner">
+        <div class="stat r">
+          <div class="stat-n" data-target="8400" data-suffix="+">0</div>
+          <div class="stat-l">Journeys Planned</div>
+        </div>
+        <div class="stat r d1">
+          <div class="stat-n" data-target="72" data-suffix="+">0</div>
+          <div class="stat-l">Countries Covered</div>
+        </div>
+        <div class="stat r d2">
+          <div class="stat-n" data-target="98" data-suffix="%">0</div>
+          <div class="stat-l">Would Travel Again</div>
+        </div>
+        <div class="stat r d3">
+          <div class="stat-n" data-target="11" data-suffix=" Yrs">0</div>
+          <div class="stat-l">In the Business</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ TESTIMONIALS ══ -->
+  <section class="section testi-bg" id="stories" aria-labelledby="testi-h">
+    <div class="wrap">
+      <div style="text-align:center; margin-bottom:56px;">
+        <div class="label">Traveler Stories</div>
+        <h2 class="display" id="testi-h" style="margin:0 auto 16px;">Straight From<br>Their Hearts</h2>
+        <p class="body-text" style="margin:0 auto;">We measure success by the moments our travelers can't stop talking about.</p>
+      </div>
+      <div class="testi-grid">
+
+        <div class="tc r d1">
+          <div class="tc-head">
+            <div class="tc-user">
+              <img class="tc-ava" src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=88&h=88&fit=crop&q=80" alt="Amara Diallo" />
+              <div>
+                <div class="tc-name">Amara Diallo</div>
+                <div class="tc-dest">Maldives · Private Villa</div>
+              </div>
+            </div>
+            <div class="tc-stars" aria-label="5 stars">★★★★★</div>
+          </div>
+          <p class="tc-text">Rogernort planned our honeymoon down to the last detail. The overwater villa, the sunset dinner on the sandbank, the private snorkeling excursion — I didn't have to think once. Pure magic.</p>
+          <div class="tc-foot">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Reviewed on Google
+          </div>
+        </div>
+
+        <div class="tc r d2">
+          <div class="tc-head">
+            <div class="tc-user">
+              <img class="tc-ava" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=88&h=88&fit=crop&q=80" alt="Marcus Osei" />
+              <div>
+                <div class="tc-name">Marcus Osei</div>
+                <div class="tc-dest">Japan · 14-Day Cultural Tour</div>
+              </div>
+            </div>
+            <div class="tc-stars" aria-label="5 stars">★★★★★</div>
+          </div>
+          <p class="tc-text">I wanted something more than tourist traps. Rogernort delivered — a tea ceremony in a 300-year-old house, a private ryokan in the mountains, a sushi counter with only eight seats. Genuinely life-changing.</p>
+          <div class="tc-foot">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Reviewed on Google
+          </div>
+        </div>
+
+        <div class="tc r d3">
+          <div class="tc-head">
+            <div class="tc-user">
+              <img class="tc-ava" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=88&h=88&fit=crop&q=80" alt="Priya Mensah" />
+              <div>
+                <div class="tc-name">Priya Mensah</div>
+                <div class="tc-dest">Santorini · 10-Day Greece</div>
+              </div>
+            </div>
+            <div class="tc-stars" aria-label="5 stars">★★★★★</div>
+          </div>
+          <p class="tc-text">The whole trip felt like a dream. Our villa overlooked the caldera, breakfast arrived on the terrace every morning, and every restaurant they recommended was absolutely perfect. I cried at sunset. No regrets.</p>
+          <div class="tc-foot">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Reviewed on Google
+          </div>
+        </div>
+
+        <div class="tc r d1">
+          <div class="tc-head">
+            <div class="tc-user">
+              <img class="tc-ava" src="https://images.unsplash.com/photo-1545871836-7e91d3b04bc5?w=88&h=88&fit=crop&q=80" alt="Kweku Boateng" />
+              <div>
+                <div class="tc-name">Kweku Boateng</div>
+                <div class="tc-dest">Bali · Family Retreat</div>
+              </div>
+            </div>
+            <div class="tc-stars" aria-label="5 stars">★★★★★</div>
+          </div>
+          <p class="tc-text">Traveling with three kids felt impossible — until Rogernort stepped in. They found us a villa with a private pool, organised kid-friendly cooking classes, and even arranged a firefly river cruise. The kids still talk about it.</p>
+          <div class="tc-foot">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Reviewed on Google
+          </div>
+        </div>
+
+        <div class="tc r d2">
+          <div class="tc-head">
+            <div class="tc-user">
+              <img class="tc-ava" src="https://images.unsplash.com/photo-1589156280159-27698a70f29e?w=88&h=88&fit=crop&q=80" alt="Serena Owusu" />
+              <div>
+                <div class="tc-name">Serena Owusu</div>
+                <div class="tc-dest">Cape Town · 8 Days</div>
+              </div>
+            </div>
+            <div class="tc-stars" aria-label="5 stars">★★★★★</div>
+          </div>
+          <p class="tc-text">Cape Town was already on my bucket list but Rogernort transformed it into something extraordinary. The wine farm dinner, the helicopter over Table Mountain, the shark cage — every day had something to write home about.</p>
+          <div class="tc-foot">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Reviewed on Google
+          </div>
+        </div>
+
+        <div class="tc r d3">
+          <div class="tc-head">
+            <div class="tc-user">
+              <img class="tc-ava" src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=88&h=88&fit=crop&q=80" alt="Nii Adama" />
+              <div>
+                <div class="tc-name">Nii Adama</div>
+                <div class="tc-dest">Peru · Machu Picchu Trek</div>
+              </div>
+            </div>
+            <div class="tc-stars" aria-label="5 stars">★★★★★</div>
+          </div>
+          <p class="tc-text">Standing at the Sun Gate watching Machu Picchu emerge from the clouds is something no photo can prepare you for. Rogernort made sure I was ready, fit, and fully immersed. The trek of a lifetime, guided flawlessly.</p>
+          <div class="tc-foot">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Reviewed on Google
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CTA ══ -->
+  <div class="cta-wrap" id="plan">
+    <div class="cta-box r">
+      <div class="cta-left">
+        <div class="label" style="color:rgba(200,146,42,.8);">Get Started</div>
+        <h2 class="display light" style="margin-bottom:16px;">
+          Ready to Plan<br>Your Next<br><i style="font-style:italic; color:var(--gold-l);">Great Escape?</i>
+        </h2>
+        <p class="body-text light" style="max-width:360px;">Tell us where you want to go. We'll take it from there — designing an experience you'll be telling stories about for years.</p>
+      </div>
+      <div class="cta-right">
+        <form class="cta-form" onsubmit="handlePlan(event)" novalidate>
+          <label for="plan-name" class="sr">Your name</label>
+          <input type="text" id="plan-name" placeholder="Your full name" />
+          <label for="plan-email" class="sr">Your email</label>
+          <input type="email" id="plan-email" placeholder="Email address" required />
+          <label for="plan-dest" class="sr">Dream destination</label>
+          <input type="text" id="plan-dest" placeholder="Dream destination" />
+          <button type="submit" id="plan-btn">Send My Request</button>
+        </form>
+        <p class="cta-note">We'll get back to you within 24 hours. No commitment needed.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FOOTER ══ -->
+  <footer id="contact" role="contentinfo">
+    <div class="foot-grid">
+      <div class="foot-about">
+        <div class="logo-wrap">
+          <div class="logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+              <circle cx="12" cy="9" r="2.5"/>
+            </svg>
+          </div>
+          <span class="logo-name">Rogernort</span>
+        </div>
+        <p>Crafting bespoke travel experiences for the curious, the adventurous, and the luxury-minded — since 2015. Every trip is a story worth telling.</p>
+        <div class="foot-socials">
+          <a href="#" class="foot-soc" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a href="#" class="foot-soc" aria-label="Facebook">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </a>
+          <a href="#" class="foot-soc" aria-label="Twitter / X">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+          <a href="#" class="foot-soc" aria-label="WhatsApp">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <nav class="foot-col" aria-label="Explore links">
+        <h4>Explore</h4>
+        <ul class="foot-links">
+          <li><a href="#home">Home</a></li>
+          <li><a href="#experiences">How We Work</a></li>
+          <li><a href="#destinations">Destinations</a></li>
+          <li><a href="#stories">Traveler Stories</a></li>
+          <li><a href="#plan">Plan a Trip</a></li>
+        </ul>
+      </nav>
+
+      <nav class="foot-col" aria-label="Services links">
+        <h4>Services</h4>
+        <ul class="foot-links">
+          <li><a href="#plan">Custom Itineraries</a></li>
+          <li><a href="#plan">Honeymoon Packages</a></li>
+          <li><a href="#plan">Group Travel</a></li>
+          <li><a href="#plan">Adventure Tours</a></li>
+          <li><a href="#plan">Visa Assistance</a></li>
+          <li><a href="#plan">Travel Insurance</a></li>
+        </ul>
+      </nav>
+
+      <div class="foot-col" id="contact">
+        <h4>Get in Touch</h4>
+        <address class="foot-contact" style="font-style:normal;">
+          <div class="fci">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            <span>4th Adote Obour Street,<br>Accra, Ghana</span>
+          </div>
+          <div class="fci">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.42 2 2 0 0 1 3.6 1.26h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.72 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.08 6.08l1.06-.98a2 2 0 0 1 2.11-.45c.91.36 1.85.6 2.81.72A2 2 0 0 1 22 16.92z"/></svg>
+            <span>+233 302 548 674</span>
+          </div>
+          <div class="fci">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <span>hello@rogernort.com</span>
+          </div>
+          <div class="fci">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Mon–Fri: 8:00AM – 6:00PM<br>Sat: 9:00AM – 3:00PM</span>
+          </div>
+        </address>
+      </div>
+    </div>
+    <div class="foot-bar">
+      <p>© 2026 Rogernort Travel. All rights reserved.</p>
+      <nav class="foot-bar-links" aria-label="Legal">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Use</a>
+        <a href="#">Cookie Settings</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    // ── Nav scroll state ──
+    const nav = document.getElementById('nav');
+    const heroSection = document.querySelector('.hero');
+    function tickNav() {
+      const past = window.scrollY > (heroSection?.offsetHeight ?? 500) - 100;
+      nav.classList.toggle('scrolled', past);
+      nav.classList.toggle('over-hero', !past);
+    }
+    window.addEventListener('scroll', tickNav, { passive: true });
+    tickNav();
+
+    // ── Hero Ken Burns ──
+    window.addEventListener('load', () => {
+      document.getElementById('heroBg')?.classList.add('ready');
+    });
+
+    // ── Burger ──
+    const burger = document.getElementById('burger');
+    const drawer = document.getElementById('drawer');
+    burger.addEventListener('click', () => {
+      const o = burger.classList.toggle('open');
+      drawer.classList.toggle('open', o);
+      burger.setAttribute('aria-expanded', o);
+      drawer.setAttribute('aria-hidden', !o);
+    });
+    drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+      burger.classList.remove('open');
+      drawer.classList.remove('open');
+      burger.setAttribute('aria-expanded', 'false');
+    }));
+
+    // ── Reveal on scroll ──
+    const revEls = document.querySelectorAll('.r');
+    new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); } });
+    }, { threshold: 0.1 }).observe === undefined
+      ? revEls.forEach(el => el.classList.add('in'))
+      : (() => {
+          const obs = new IntersectionObserver(entries => {
+            entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); } });
+          }, { threshold: 0.1 });
+          revEls.forEach(el => obs.observe(el));
+        })();
+
+    // ── Count-up ──
+    const statBand = document.querySelector('.stats-bg');
+    let counted = false;
+    if (statBand) {
+      new IntersectionObserver(([e]) => {
+        if (e.isIntersecting && !counted) {
+          counted = true;
+          document.querySelectorAll('.stat-n[data-target]').forEach(el => {
+            const target = +el.dataset.target, suffix = el.dataset.suffix || '';
+            let cur = 0;
+            const step = () => {
+              cur = Math.min(cur + Math.ceil(target / 60), target);
+              el.textContent = cur.toLocaleString() + suffix;
+              if (cur < target) requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+          });
+        }
+      }, { threshold: 0.35 }).observe(statBand);
+    }
+
+    // ── Plan form ──
+    function handlePlan(e) {
+      e.preventDefault();
+      const btn = document.getElementById('plan-btn');
+      btn.textContent = 'Request Sent ✓';
+      btn.style.background = '#22c55e';
+      e.target.querySelectorAll('input').forEach(i => i.value = '');
+      setTimeout(() => { btn.textContent = 'Send My Request'; btn.style.background = ''; }, 4000);
+    }
+
+    // ── Reduced motion ──
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches)
+      document.querySelectorAll('.r').forEach(el => el.classList.add('in'));
+  </script>
+</body>
+</html>
