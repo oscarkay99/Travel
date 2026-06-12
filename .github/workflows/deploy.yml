@@ -8,32 +8,34 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Copy files to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: root
-          key: ${{ secrets.VPS_SSH_KEY }}
-          source: "index.html,photos/,api/"
-          target: /opt/rogernort/deploy/
-
-      - name: Apply deployment
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
           username: root
           key: ${{ secrets.VPS_SSH_KEY }}
+          command_timeout: 5m
           script: |
             set -e
-            cp /opt/rogernort/deploy/index.html /opt/rogernort/nginx/html/
-            cp -r /opt/rogernort/deploy/photos/ /opt/rogernort/nginx/html/
-            cp -r /opt/rogernort/deploy/api/ /opt/rogernort/api-src/
 
+            REPO_DIR=/opt/rogernort/repo
+
+            # Clone on first run, pull on subsequent runs
+            if [ -d "$REPO_DIR/.git" ]; then
+              git -C "$REPO_DIR" fetch origin main
+              git -C "$REPO_DIR" reset --hard origin/main
+            else
+              git clone https://github.com/oscarkay99/Travel.git "$REPO_DIR"
+            fi
+
+            # Deploy static files
+            cp "$REPO_DIR/index.html" /opt/rogernort/nginx/html/
+            cp -r "$REPO_DIR/photos/." /opt/rogernort/nginx/html/photos/
+
+            # Rebuild API container if sources changed
+            cp -r "$REPO_DIR/api/." /opt/rogernort/api/
             cd /opt/rogernort
-            # Rebuild API only if Dockerfile or server.js changed
-            cp -r /opt/rogernort/api-src/. /opt/rogernort/api/
             docker compose build api
             docker compose up -d --no-deps --force-recreate api
-            echo "Deploy complete at $(date)"
+
+            echo "✓ Deployed at $(date)"
