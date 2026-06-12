@@ -31,6 +31,7 @@ jobs:
             # Deploy static files
             cp "$REPO_DIR/index.html" /opt/rogernort/nginx/html/
             cp -r "$REPO_DIR/photos/." /opt/rogernort/nginx/html/photos/
+            cp "$REPO_DIR"/favicon*.png "$REPO_DIR"/favicon.ico "$REPO_DIR"/apple-touch-icon.png /opt/rogernort/nginx/html/
 
             # Rebuild API container if sources changed
             cp -r "$REPO_DIR/api/." /opt/rogernort/api/
