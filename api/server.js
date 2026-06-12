@@ -1,8 +1,39 @@
 const http = require('http');
+const https = require('https');
 
-const RESEND_KEY = process.env.RESEND_API_KEY;
-const TO_EMAIL   = process.env.TO_EMAIL || 'akwaabatoursa@gmail.com';
-const PORT       = process.env.PORT || 3000;
+const RESEND_KEY       = process.env.RESEND_API_KEY;
+const TO_EMAIL         = process.env.TO_EMAIL || 'akwaabatoursa@gmail.com';
+const PORT             = process.env.PORT || 3000;
+const SUPA_URL         = process.env.SUPA_URL || 'http://supa-kong:8000';
+const SUPA_SERVICE_KEY = process.env.SUPA_SERVICE_KEY;
+
+function supaInsert(table, data) {
+  if (!SUPA_SERVICE_KEY) return Promise.resolve();
+  const url = new URL(`${SUPA_URL}/rest/v1/${table}`);
+  const body = JSON.stringify(data);
+  const isHttps = url.protocol === 'https:';
+  const lib = isHttps ? https : http;
+  const opts = {
+    hostname: url.hostname,
+    port: url.port || (isHttps ? 443 : 80),
+    path: url.pathname,
+    method: 'POST',
+    headers: {
+      'apikey': SUPA_SERVICE_KEY,
+      'Authorization': `Bearer ${SUPA_SERVICE_KEY}`,
+      'Content-Type': 'application/json',
+      'Content-Profile': 'rogernort',
+      'Content-Length': Buffer.byteLength(body),
+      'Prefer': 'return=minimal'
+    }
+  };
+  return new Promise((resolve) => {
+    const r = lib.request(opts, (res) => { res.resume(); resolve(); });
+    r.on('error', (e) => console.error('Supabase insert error:', e.message));
+    r.write(body);
+    r.end();
+  });
+}
 
 const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', 'https://rogernortconsult.com');
@@ -10,15 +41,26 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
-  if (req.method !== 'POST' || req.url !== '/api/apply') {
-    res.writeHead(404); res.end('Not found'); return;
-  }
+  if (req.method !== 'POST') { res.writeHead(404); res.end('Not found'); return; }
 
   let body = '';
   req.on('data', chunk => body += chunk);
   req.on('end', async () => {
     try {
-      const { fname, lname, phone, age, email, country, passport, skills, note } = JSON.parse(body);
+      const data = JSON.parse(body);
+
+      // ── Trip Enquiry (CTA form) ──
+      if (req.url === '/api/enquire') {
+        const { name, email, destination } = data;
+        await supaInsert('enquiries', { name: name || null, email, destination: destination || null });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true }));
+        return;
+      }
+
+      if (req.url !== '/api/apply') { res.writeHead(404); res.end('Not found'); return; }
+
+      const { fname, lname, phone, age, email, country, passport, skills, note } = data;
 
       const html = `
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#f4f6fb;padding:32px;">
@@ -66,10 +108,19 @@ const server = http.createServer(async (req, res) => {
       };
 
       await new Promise((resolve, reject) => {
-        const r = require('https').request(options, resolve);
+        const r = https.request(options, resolve);
         r.on('error', reject);
         r.write(payload);
         r.end();
+      });
+
+      await supaInsert('applications', {
+        first_name: fname, last_name: lname, phone,
+        age: parseInt(age) || null,
+        email: email || null, country,
+        passport: passport || null,
+        skills, notes: note || null,
+        status: 'new'
       });
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
