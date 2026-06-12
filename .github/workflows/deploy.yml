@@ -34,6 +34,11 @@ jobs:
 
             # Rebuild API container if sources changed
             cp -r "$REPO_DIR/api/." /opt/rogernort/api/
+
+            # Inject Supabase service key from VPS .env into override file (key never touches git)
+            SUPA_KEY=$(grep '^SERVICE_ROLE_KEY=' /opt/rogernort/supabase/.env | cut -d= -f2-)
+            printf 'services:\n  api:\n    environment:\n      - SUPA_URL=http://supa-kong:8000\n      - SUPA_SERVICE_KEY=%s\n' "$SUPA_KEY" > /opt/rogernort/docker-compose.override.yml
+
             cd /opt/rogernort
             docker compose build api
             docker compose up -d --no-deps --force-recreate api
