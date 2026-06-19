@@ -648,8 +648,9 @@
     }
     .foot-bar p { font-size: .78rem; color: rgba(255,255,255,.2); }
     .foot-bar-links { display: flex; gap: 20px; }
-    .foot-bar-links a { font-size: .78rem; color: rgba(255,255,255,.2); transition: color .2s; }
-    .foot-bar-links a:hover { color: rgba(255,255,255,.5); }
+    .foot-bar-links a, .foot-bar-links button { font-size: .78rem; color: rgba(255,255,255,.2); transition: color .2s; }
+    .foot-bar-links a:hover, .foot-bar-links button:hover { color: rgba(255,255,255,.5); }
+    .foot-bar-links button { background: none; border: none; padding: 0; cursor: pointer; font-family: inherit; }
 
     /* Footer logo */
     .foot-logo-img { height: 130px; width: auto; display: block; object-fit: contain; }
@@ -1563,7 +1564,7 @@
       <nav class="foot-bar-links" aria-label="Legal">
         <a href="/privacy-policy.html">Privacy Policy</a>
         <a href="/terms.html">Terms of Use</a>
-        <a href="#" id="cookieSettingsBtn">Cookie Settings</a>
+        <button id="cookieSettingsBtn" type="button">Cookie Settings</button>
       </nav>
     </div>
   </footer>
@@ -1936,8 +1937,7 @@
       localStorage.setItem(cookieKey, 'declined');
       hideCookieBanner();
     });
-    document.getElementById('cookieSettingsBtn')?.addEventListener('click', (e) => {
-      e.preventDefault();
+    document.getElementById('cookieSettingsBtn')?.addEventListener('click', () => {
       localStorage.removeItem(cookieKey);
       showCookieBanner();
     });
