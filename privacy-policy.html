@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — Rogernort Travel &amp; Tour</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f2f6fc;
+      color: #1a2340;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: #0098c4; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    :root {
+      --ink:    #1a2340;
+      --ink-2:  #3d4a6b;
+      --ink-3:  #7a85a8;
+      --bg:     #f2f6fc;
+      --white:  #ffffff;
+      --border: #dce3f0;
+      --dark:   #0d1e3d;
+      --navy:   #1c3669;
+      --cyan:   #00b8e6;
+      --cyan-d: #0098c4;
+    }
+
+    /* ── NAV ── */
+    .top-bar {
+      background: var(--dark);
+      padding: 14px 40px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .top-bar img { height: 52px; width: auto; display: block; }
+    .top-bar a.back {
+      margin-left: auto;
+      font-size: .8rem; font-weight: 700;
+      color: rgba(255,255,255,.55);
+      display: flex; align-items: center; gap: 6px;
+      transition: color .2s;
+    }
+    .top-bar a.back:hover { color: var(--cyan); text-decoration: none; }
+    .top-bar a.back svg { width: 14px; height: 14px; }
+
+    /* ── HERO ── */
+    .hero {
+      background: var(--dark);
+      padding: 64px 40px 72px;
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 100%, rgba(0,184,230,.14) 0%, transparent 65%);
+    }
+    .hero h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      font-weight: 700; color: #fff;
+      line-height: 1.08; letter-spacing: -.03em;
+      margin-bottom: 14px; position: relative;
+    }
+    .hero h1 span { color: var(--cyan); font-style: italic; }
+    .hero p {
+      font-size: .92rem; color: rgba(255,255,255,.45);
+      max-width: 500px; margin: 0 auto; line-height: 1.75;
+      position: relative;
+    }
+
+    /* ── CONTENT ── */
+    .content {
+      max-width: 820px; margin: 0 auto;
+      padding: 72px 40px 100px;
+    }
+
+    .toc {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin-bottom: 60px;
+    }
+    .toc h2 {
+      font-size: .7rem; font-weight: 700;
+      letter-spacing: 2.5px; text-transform: uppercase;
+      color: var(--cyan-d); margin-bottom: 16px;
+    }
+    .toc ol {
+      padding-left: 20px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .toc li a {
+      font-size: .88rem; color: var(--ink-2); font-weight: 500;
+    }
+    .toc li a:hover { color: var(--cyan-d); }
+
+    .section { margin-bottom: 56px; }
+    .section h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 700; color: var(--navy);
+      margin-bottom: 18px; letter-spacing: -.02em;
+      padding-top: 24px; scroll-margin-top: 24px;
+    }
+    .section h3 {
+      font-size: 1rem; font-weight: 700; color: var(--navy);
+      margin: 22px 0 10px;
+    }
+    .section p, .section li {
+      font-size: .93rem; color: var(--ink-2); line-height: 1.85;
+      margin-bottom: 14px;
+    }
+    .section ul, .section ol {
+      padding-left: 22px; margin-bottom: 14px;
+    }
+    .section li { margin-bottom: 8px; }
+
+    .data-table {
+      width: 100%; border-collapse: collapse;
+      margin: 18px 0 24px; font-size: .88rem;
+      border-radius: 12px; overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .data-table thead {
+      background: var(--navy); color: #fff;
+    }
+    .data-table th, .data-table td {
+      padding: 12px 16px; text-align: left; vertical-align: top;
+    }
+    .data-table th { font-size: .75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+    .data-table tbody tr:nth-child(even) { background: var(--bg); }
+    .data-table td { color: var(--ink-2); line-height: 1.6; }
+
+    .callout {
+      background: rgba(0,184,230,.07);
+      border-left: 3px solid var(--cyan);
+      border-radius: 0 10px 10px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+      font-size: .88rem; color: var(--ink-2); line-height: 1.75;
+    }
+    .callout strong { color: var(--navy); }
+
+    .divider {
+      border: none; border-top: 1px solid var(--border);
+      margin: 48px 0;
+    }
+
+    /* ── FOOTER ── */
+    .foot {
+      background: #080f1e; padding: 32px 40px;
+      text-align: center;
+    }
+    .foot p { font-size: .8rem; color: rgba(255,255,255,.25); margin-bottom: 10px; }
+    .foot a { color: rgba(255,255,255,.3); font-size: .8rem; margin: 0 10px; }
+    .foot a:hover { color: var(--cyan); text-decoration: none; }
+
+    @media (max-width: 640px) {
+      .top-bar { padding: 12px 20px; }
+      .hero { padding: 48px 24px 56px; }
+      .content { padding: 48px 24px 72px; }
+      .data-table { font-size: .8rem; }
+      .data-table th, .data-table td { padding: 10px 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <a href="/"><img src="photos/e9645b58-be3c-4974-8a03-0b34352a88e8.png" alt="Rogernort Travel and Tour" /></a>
+    <a href="/" class="back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to site
+    </a>
+  </div>
+
+  <div class="hero">
+    <h1>Privacy <span>Policy</span></h1>
+    <p>Last updated: June 2026 &nbsp;·&nbsp; Effective for all users of rogernortconsult.com</p>
+  </div>
+
+  <div class="content">
+
+    <div class="toc">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#who-we-are">Who We Are</a></li>
+        <li><a href="#data-collected">What Data We Collect</a></li>
+        <li><a href="#why-we-collect">Why We Collect It</a></li>
+        <li><a href="#how-stored">How Data Is Stored and Transmitted</a></li>
+        <li><a href="#who-access">Who Can Access Your Data</a></li>
+        <li><a href="#retention">How Long We Keep Data</a></li>
+        <li><a href="#cookies">Cookies and Local Storage</a></li>
+        <li><a href="#your-rights">Your Rights</a></li>
+        <li><a href="#children">Children's Privacy</a></li>
+        <li><a href="#changes">Changes to This Policy</a></li>
+        <li><a href="#contact-us">Contact Us</a></li>
+      </ol>
+    </div>
+
+    <!-- 1 -->
+    <div class="section" id="who-we-are">
+      <h2>1. Who We Are</h2>
+      <p>
+        Rogernort Travel &amp; Tour ("we", "us", "our") is a travel and recruitment consultancy based in Accra, Ghana.
+        We operate the website <strong>rogernortconsult.com</strong> and provide services including bespoke travel planning,
+        visa assistance, flight and hotel booking, and EU work placement.
+      </p>
+      <p>
+        Our office is located at Adenta New Legon Transformer, Accra, Ghana.<br />
+        Contact email: <a href="mailto:akwaabatoursa@gmail.com">akwaabatoursa@gmail.com</a><br />
+        WhatsApp: <a href="https://wa.me/233559499248">+233 55 949 9248</a>
+      </p>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 2 -->
+    <div class="section" id="data-collected">
+      <h2>2. What Data We Collect</h2>
+      <p>We collect personal data only when you voluntarily submit one of our two on-site forms.</p>
+
+      <h3>Work Abroad Application Form</h3>
+      <table class="data-table">
+        <thead>
+          <tr><th>Data Point</th><th>Required?</th><th>Example</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>First name &amp; last name</td><td>Yes</td><td>John Doe</td></tr>
+          <tr><td>WhatsApp phone number</td><td>Yes</td><td>055 123 4567</td></tr>
+          <tr><td>Age</td><td>Yes</td><td>28</td></tr>
+          <tr><td>Email address</td><td>No (optional)</td><td>john@email.com</td></tr>
+          <tr><td>Preferred country</td><td>Yes</td><td>Czech Republic, Poland…</td></tr>
+          <tr><td>Passport status</td><td>No</td><td>Valid / Expired / None</td></tr>
+          <tr><td>Occupation / skills</td><td>Yes</td><td>Welder, Nurse, Driver…</td></tr>
+          <tr><td>Additional notes</td><td>No</td><td>Work history, questions</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Plan a Trip Enquiry Form</h3>
+      <table class="data-table">
+        <thead>
+          <tr><th>Data Point</th><th>Required?</th><th>Example</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Full name</td><td>No</td><td>Jane Appiah</td></tr>
+          <tr><td>Email address</td><td>Yes</td><td>jane@email.com</td></tr>
+          <tr><td>Dream destination</td><td>No</td><td>Maldives, Santorini…</td></tr>
+        </tbody>
+      </table>
+
+      <p>We do <strong>not</strong> collect payment information, national ID numbers, passport numbers, biometric data, or any sensitive data categories beyond what is listed above. We do not install tracking scripts or advertising pixels.</p>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 3 -->
+    <div class="section" id="why-we-collect">
+      <h2>3. Why We Collect It</h2>
+      <ul>
+        <li><strong>Work Abroad applications:</strong> To assess eligibility and contact you about EU job placement opportunities. This is the primary purpose of the application form.</li>
+        <li><strong>Trip enquiries:</strong> To follow up with a personalised travel proposal matching your stated destination and preferences.</li>
+        <li><strong>WhatsApp communication:</strong> When you submit a form, a summary is also sent to our business WhatsApp number so our team can respond quickly.</li>
+        <li><strong>Service improvement:</strong> Aggregated, anonymised data (e.g., which countries are most requested) may be reviewed to improve our services. This does not involve individual profiling.</li>
+      </ul>
+      <div class="callout">
+        <strong>We do not sell, rent, or trade your personal data to any third party for marketing purposes.</strong>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 4 -->
+    <div class="section" id="how-stored">
+      <h2>4. How Data Is Stored and Transmitted</h2>
+      <p>When you submit a form:</p>
+      <ol>
+        <li>Your data is sent over <strong>HTTPS (TLS encryption)</strong> to our secure API hosted on a private VPS server.</li>
+        <li>The API forwards your information by email to our team inbox using the Resend transactional email service.</li>
+        <li>A copy of the key details is also delivered via WhatsApp to our business number (+233 55 949 9248) so we can respond promptly.</li>
+        <li>Application data may be stored in a password-protected PostgreSQL database on the same VPS. Only authorised Rogernort staff have database access.</li>
+      </ol>
+      <p>Our server is hosted on Hostinger VPS infrastructure with Ubuntu 24.04 LTS. All connections to the site and API use HTTPS certificates from Let's Encrypt.</p>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 5 -->
+    <div class="section" id="who-access">
+      <h2>5. Who Can Access Your Data</h2>
+      <ul>
+        <li><strong>Rogernort staff</strong> — the owner and any staff members directly involved in processing your application or travel enquiry.</li>
+        <li><strong>Resend</strong> — our transactional email provider, which processes and delivers emails on our behalf. Resend is subject to its own privacy policy and processes data as a data processor.</li>
+        <li><strong>WhatsApp / Meta</strong> — when your summary is delivered to our WhatsApp, it passes through Meta's platform. Meta's privacy policy governs their handling of message content.</li>
+        <li><strong>Hosting infrastructure</strong> — Hostinger provides the server on which data may be temporarily or persistently stored.</li>
+      </ul>
+      <p>No other third parties receive your personal data.</p>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 6 -->
+    <div class="section" id="retention">
+      <h2>6. How Long We Keep Data</h2>
+      <p>
+        We retain personal data for as long as necessary to fulfil the purpose for which it was collected, and for a reasonable period afterwards in case of follow-up queries. In practice:
+      </p>
+      <ul>
+        <li><strong>Active enquiries:</strong> Data is kept for the duration of the application or travel planning process.</li>
+        <li><strong>Completed or declined enquiries:</strong> Retained for up to <strong>24 months</strong> from the last contact, then deleted.</li>
+        <li><strong>Email inbox copies:</strong> Subject to our email provider's standard retention. We review and purge old enquiries annually.</li>
+      </ul>
+      <p>You may request earlier deletion at any time (see <a href="#your-rights">Your Rights</a>).</p>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 7 -->
+    <div class="section" id="cookies">
+      <h2>7. Cookies and Local Storage</h2>
+      <p>
+        This website does <strong>not</strong> use advertising cookies, tracking cookies, or any third-party analytics scripts (e.g., Google Analytics, Facebook Pixel).
+      </p>
+      <p>We use <strong>localStorage</strong> — a browser-based storage mechanism — for two purposes:</p>
+      <ul>
+        <li>Remembering your cookie consent preference so we do not show the banner on every visit.</li>
+        <li>Minor UI state (e.g., preloader dismissed).</li>
+      </ul>
+      <p>No personal data is stored in cookies or localStorage. You can clear this data at any time from your browser settings under "Site Data" or "Storage".</p>
+      <p>External resources loaded by the site include Google Fonts (for typography) and Mixkit (for the hero video). These third-party domains may set their own cookies subject to their respective privacy policies. Loading fonts requires your browser to make a request to Google's servers, which may log your IP address per Google's standard logging practices.</p>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 8 -->
+    <div class="section" id="your-rights">
+      <h2>8. Your Rights</h2>
+      <p>Regardless of where you are located, you have the right to:</p>
+      <ul>
+        <li><strong>Access</strong> — request a copy of the personal data we hold about you.</li>
+        <li><strong>Correction</strong> — ask us to correct inaccurate or incomplete data.</li>
+        <li><strong>Deletion</strong> — request that we erase your personal data. We will action this within 30 days unless we have a legal reason to retain it.</li>
+        <li><strong>Objection</strong> — object to us processing your data for direct follow-up if you change your mind after submitting a form.</li>
+        <li><strong>Withdrawal of consent</strong> — where processing is based on your consent, you may withdraw it at any time.</li>
+      </ul>
+      <div class="callout">
+        To exercise any of these rights, email us at <a href="mailto:akwaabatoursa@gmail.com">akwaabatoursa@gmail.com</a> with the subject line <strong>"Data Request"</strong> and the details of your request. We will respond within 14 business days.
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 9 -->
+    <div class="section" id="children">
+      <h2>9. Children's Privacy</h2>
+      <p>
+        Our services are not directed at persons under the age of 18. Our Work Abroad application form includes an age field with a minimum of 18. We do not knowingly collect personal data from children. If you believe a child has submitted data to us, please contact us and we will delete it promptly.
+      </p>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 10 -->
+    <div class="section" id="changes">
+      <h2>10. Changes to This Policy</h2>
+      <p>
+        We may update this Privacy Policy from time to time to reflect changes in our practices or applicable law. When we do, we will revise the "Last updated" date at the top of this page. We encourage you to review this policy periodically. Continued use of the site after changes are posted constitutes your acceptance of the updated policy.
+      </p>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 11 -->
+    <div class="section" id="contact-us">
+      <h2>11. Contact Us</h2>
+      <p>If you have any questions about this Privacy Policy or how we handle your data, please reach out:</p>
+      <ul>
+        <li><strong>Email:</strong> <a href="mailto:akwaabatoursa@gmail.com">akwaabatoursa@gmail.com</a></li>
+        <li><strong>WhatsApp:</strong> <a href="https://wa.me/233559499248">+233 55 949 9248</a></li>
+        <li><strong>Office:</strong> Adenta New Legon Transformer, Accra, Ghana</li>
+        <li><strong>Hours:</strong> Mon–Fri 8:00AM–6:00PM · Sat 9:00AM–3:00PM</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <footer class="foot">
+    <p>© 2026 Rogernort Travel &amp; Tour. All rights reserved.</p>
+    <a href="/">Home</a>
+    <a href="/privacy-policy.html">Privacy Policy</a>
+    <a href="/terms.html">Terms of Use</a>
+  </footer>
+
+</body>
+</html>
