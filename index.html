@@ -813,40 +813,83 @@
 
     /* ─── COOKIE BANNER ─── */
     #cookieBanner {
-      position: fixed; bottom: 20px; left: 20px;
-      max-width: 420px;
-      background: var(--dark);
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 16px;
-      padding: 22px 24px;
+      position: fixed; bottom: 28px; left: 28px;
+      width: min(380px, calc(100vw - 40px));
+      background: rgba(13,30,61,.97);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      border: 1px solid rgba(0,184,230,.2);
+      border-top: 2px solid var(--cyan);
+      border-radius: 20px;
+      padding: 26px 26px 24px;
       z-index: 950;
-      box-shadow: 0 20px 60px rgba(0,0,0,.45);
-      transform: translateY(120%);
+      box-shadow:
+        0 32px 80px rgba(0,0,0,.55),
+        0 0 0 1px rgba(255,255,255,.04) inset,
+        0 6px 28px rgba(0,184,230,.1);
+      transform: translateY(calc(100% + 52px));
       opacity: 0;
-      transition: transform .4s var(--ease), opacity .4s ease;
+      transition: transform .55s cubic-bezier(0,.55,.45,1), opacity .45s ease;
     }
     #cookieBanner.show { transform: none; opacity: 1; }
-    #cookieBanner p {
-      font-size: .82rem; color: rgba(255,255,255,.55); line-height: 1.7;
-      margin-bottom: 16px;
+
+    .cb-header {
+      display: flex; align-items: center; gap: 13px;
+      margin-bottom: 14px;
     }
-    #cookieBanner a { color: var(--cyan); }
-    .cookie-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+    .cb-icon-wrap {
+      width: 42px; height: 42px; flex-shrink: 0;
+      background: rgba(0,184,230,.1);
+      border: 1px solid rgba(0,184,230,.22);
+      border-radius: 12px;
+      display: grid; place-items: center;
+    }
+    .cb-icon-wrap svg { width: 20px; height: 20px; color: var(--cyan); }
+    .cb-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem; font-weight: 700;
+      color: #fff; letter-spacing: -.02em; line-height: 1.15;
+    }
+    .cb-text {
+      font-size: .8rem; color: rgba(255,255,255,.48);
+      line-height: 1.78; margin-bottom: 20px;
+    }
+    .cb-text a {
+      color: var(--cyan); text-decoration: none;
+      font-weight: 600;
+    }
+    .cb-text a:hover { text-decoration: underline; }
+    .cb-divider {
+      border: none; border-top: 1px solid rgba(255,255,255,.07);
+      margin: 0 0 20px;
+    }
+    .cb-actions { display: flex; gap: 10px; }
     .cookie-accept {
+      flex: 1;
       background: linear-gradient(135deg, var(--cyan) 0%, var(--cyan-d) 100%);
-      color: #fff; font-size: .8rem; font-weight: 700;
-      padding: 10px 22px; border-radius: 9px; border: none;
-      cursor: pointer; transition: opacity .2s;
+      color: #fff; font-family: inherit; font-size: .8rem; font-weight: 700;
+      padding: 13px 18px; border-radius: 11px; border: none;
+      cursor: pointer; letter-spacing: .3px;
+      transition: opacity .2s, transform .2s, box-shadow .2s;
     }
-    .cookie-accept:hover { opacity: .88; }
+    .cookie-accept:hover {
+      opacity: .9; transform: translateY(-1px);
+      box-shadow: 0 8px 22px rgba(0,184,230,.38);
+    }
     .cookie-decline {
-      background: rgba(255,255,255,.07);
-      color: rgba(255,255,255,.45); font-size: .8rem; font-weight: 600;
-      padding: 10px 18px; border-radius: 9px;
+      flex: 1;
+      background: rgba(255,255,255,.05);
+      color: rgba(255,255,255,.5); font-family: inherit;
+      font-size: .8rem; font-weight: 600;
+      padding: 13px 18px; border-radius: 11px;
       border: 1px solid rgba(255,255,255,.1);
-      cursor: pointer; transition: background .2s;
+      cursor: pointer;
+      transition: background .2s, color .2s;
     }
-    .cookie-decline:hover { background: rgba(255,255,255,.12); }
+    .cookie-decline:hover {
+      background: rgba(255,255,255,.1);
+      color: rgba(255,255,255,.82);
+    }
 
     /* ─── MAINTENANCE BANNER ─── */
     #maintBanner {
@@ -1570,13 +1613,22 @@
   </footer>
 
   <!-- ══ COOKIE BANNER ══ -->
-  <div id="cookieBanner" role="dialog" aria-label="Cookie notice" aria-live="polite">
-    <p>
-      We use essential browser storage (localStorage) to remember your preferences. We don't use advertising or tracking cookies. See our <a href="/privacy-policy.html#cookies">Cookie Policy</a> for details.
+  <div id="cookieBanner" role="dialog" aria-label="Cookie consent" aria-live="polite">
+    <div class="cb-header">
+      <div class="cb-icon-wrap" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+      <div class="cb-title">Your Privacy Matters</div>
+    </div>
+    <p class="cb-text">
+      We use essential browser storage to keep your experience smooth. No tracking or advertising cookies are used on this site. <a href="/privacy-policy.html#cookies">Read our Privacy Policy&nbsp;→</a>
     </p>
-    <div class="cookie-btns">
-      <button class="cookie-accept" id="cookieAccept">Got it</button>
-      <button class="cookie-decline" id="cookieDecline">Decline non-essential</button>
+    <hr class="cb-divider" />
+    <div class="cb-actions">
+      <button class="cookie-accept" id="cookieAccept">Accept &amp; Continue</button>
+      <button class="cookie-decline" id="cookieDecline">Decline</button>
     </div>
   </div>
 
