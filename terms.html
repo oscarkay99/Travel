@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Terms of Use — Rogernort Travel &amp; Tour</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f2f6fc;
+      color: #1a2340;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: #0098c4; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    :root {
+      --ink:    #1a2340;
+      --ink-2:  #3d4a6b;
+      --ink-3:  #7a85a8;
+      --bg:     #f2f6fc;
+      --white:  #ffffff;
+      --border: #dce3f0;
+      --dark:   #0d1e3d;
+      --navy:   #1c3669;
+      --cyan:   #00b8e6;
+      --cyan-d: #0098c4;
+    }
+
+    .top-bar {
+      background: var(--dark);
+      padding: 14px 40px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .top-bar img { height: 52px; width: auto; display: block; }
+    .top-bar a.back {
+      margin-left: auto;
+      font-size: .8rem; font-weight: 700;
+      color: rgba(255,255,255,.55);
+      display: flex; align-items: center; gap: 6px;
+      transition: color .2s;
+    }
+    .top-bar a.back:hover { color: var(--cyan); text-decoration: none; }
+    .top-bar a.back svg { width: 14px; height: 14px; }
+
+    .hero {
+      background: var(--dark);
+      padding: 64px 40px 72px;
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 100%, rgba(245,166,35,.1) 0%, transparent 65%);
+    }
+    .hero h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      font-weight: 700; color: #fff;
+      line-height: 1.08; letter-spacing: -.03em;
+      margin-bottom: 14px; position: relative;
+    }
+    .hero h1 span { color: #ffbb44; font-style: italic; }
+    .hero p {
+      font-size: .92rem; color: rgba(255,255,255,.45);
+      max-width: 500px; margin: 0 auto; line-height: 1.75;
+      position: relative;
+    }
+
+    .content {
+      max-width: 820px; margin: 0 auto;
+      padding: 72px 40px 100px;
+    }
+
+    .toc {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin-bottom: 60px;
+    }
+    .toc h2 {
+      font-size: .7rem; font-weight: 700;
+      letter-spacing: 2.5px; text-transform: uppercase;
+      color: var(--cyan-d); margin-bottom: 16px;
+    }
+    .toc ol {
+      padding-left: 20px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .toc li a { font-size: .88rem; color: var(--ink-2); font-weight: 500; }
+    .toc li a:hover { color: var(--cyan-d); }
+
+    .section { margin-bottom: 56px; }
+    .section h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 700; color: var(--navy);
+      margin-bottom: 18px; letter-spacing: -.02em;
+      padding-top: 24px; scroll-margin-top: 24px;
+    }
+    .section h3 {
+      font-size: 1rem; font-weight: 700; color: var(--navy);
+      margin: 22px 0 10px;
+    }
+    .section p, .section li {
+      font-size: .93rem; color: var(--ink-2); line-height: 1.85;
+      margin-bottom: 14px;
+    }
+    .section ul, .section ol { padding-left: 22px; margin-bottom: 14px; }
+    .section li { margin-bottom: 8px; }
+
+    .callout {
+      background: rgba(245,166,35,.08);
+      border-left: 3px solid #f5a623;
+      border-radius: 0 10px 10px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+      font-size: .88rem; color: var(--ink-2); line-height: 1.75;
+    }
+    .callout strong { color: var(--navy); }
+
+    .callout.info {
+      background: rgba(0,184,230,.07);
+      border-color: var(--cyan);
+    }
+
+    .divider { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+
+    .foot {
+      background: #080f1e; padding: 32px 40px;
+      text-align: center;
+    }
+    .foot p { font-size: .8rem; color: rgba(255,255,255,.25); margin-bottom: 10px; }
+    .foot a { color: rgba(255,255,255,.3); font-size: .8rem; margin: 0 10px; }
+    .foot a:hover { color: var(--cyan); text-decoration: none; }
+
+    @media (max-width: 640px) {
+      .top-bar { padding: 12px 20px; }
+      .hero { padding: 48px 24px 56px; }
+      .content { padding: 48px 24px 72px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <a href="/"><img src="photos/e9645b58-be3c-4974-8a03-0b34352a88e8.png" alt="Rogernort Travel and Tour" /></a>
+    <a href="/" class="back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to site
+    </a>
+  </div>
+
+  <div class="hero">
+    <h1>Terms of <span>Use</span></h1>
+    <p>Last updated: June 2026 &nbsp;·&nbsp; Governing all use of rogernortconsult.com and Rogernort services</p>
+  </div>
+
+  <div class="content">
+
+    <div class="toc">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#acceptance">Acceptance of Terms</a></li>
+        <li><a href="#services">Our Services</a></li>
+        <li><a href="#eligibility">Eligibility</a></li>
+        <li><a href="#what-you-can-do">Permitted Use</a></li>
+        <li><a href="#what-you-cannot-do">Prohibited Use</a></li>
+        <li><a href="#work-abroad">Work Abroad Placement</a></li>
+        <li><a href="#fees-payment">Fees and Payment</a></li>
+        <li><a href="#no-guarantees">No Guarantees</a></li>
+        <li><a href="#liability">Limitation of Liability</a></li>
+        <li><a href="#ip">Intellectual Property</a></li>
+        <li><a href="#third-party">Third-Party Links and Content</a></li>
+        <li><a href="#governing-law">Governing Law</a></li>
+        <li><a href="#changes">Changes to These Terms</a></li>
+        <li><a href="#contact-us">Contact Us</a></li>
+      </ol>
+    </div>
+
+    <!-- 1 -->
+    <div class="section" id="acceptance">
+      <h2>1. Acceptance of Terms</h2>
+      <p>
+        By accessing or using <strong>rogernortconsult.com</strong> or submitting any form on this site, you agree to be bound by these Terms of Use and our <a href="/privacy-policy.html">Privacy Policy</a>. If you do not agree to these terms, please do not use this website or our services.
+      </p>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 2 -->
+    <div class="section" id="services">
+      <h2>2. Our Services</h2>
+      <p>Rogernort Travel &amp; Tour provides the following services:</p>
+      <ul>
+        <li>Bespoke travel planning and itinerary design</li>
+        <li>Flight ticket booking assistance</li>
+        <li>Hotel and accommodation booking</li>
+        <li>Visa and passport application assistance</li>
+        <li>EU work placement and relocation support</li>
+        <li>General travel consultancy</li>
+      </ul>
+      <p>All services are provided from our office in Accra, Ghana. Specific service terms, timelines, and requirements are communicated during your in-person or WhatsApp consultation with our team.</p>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 3 -->
+    <div class="section" id="eligibility">
+      <h2>3. Eligibility</h2>
+      <ul>
+        <li>You must be at least <strong>18 years of age</strong> to use this website or apply for our services.</li>
+        <li>Work Abroad placements are available to eligible applicants who meet the age, health, and documentation requirements of the destination country. We will advise you of specific requirements during your consultation.</li>
+        <li>By submitting our Work Abroad application form, you confirm you are 18 or older.</li>
+      </ul>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 4 -->
+    <div class="section" id="what-you-can-do">
+      <h2>4. Permitted Use</h2>
+      <p>You are permitted to:</p>
+      <ul>
+        <li>Browse this website for information about our travel and work-abroad services.</li>
+        <li>Submit enquiry and application forms to request a consultation.</li>
+        <li>Share information about our services with friends or family.</li>
+        <li>Contact us via WhatsApp, email, or in person at our office.</li>
+      </ul>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 5 -->
+    <div class="section" id="what-you-cannot-do">
+      <h2>5. Prohibited Use</h2>
+      <p>You agree not to:</p>
+      <ul>
+        <li>Submit false, misleading, or fraudulent information on any form.</li>
+        <li>Use this site for any unlawful purpose or in violation of any applicable law.</li>
+        <li>Attempt to access, hack, or disrupt any part of our website, API, or infrastructure.</li>
+        <li>Scrape, copy, or reproduce site content for commercial purposes without our written permission.</li>
+        <li>Impersonate Rogernort Travel &amp; Tour or misrepresent an affiliation with us.</li>
+        <li>Use our brand, logo, or name to advertise or promote services without prior written consent.</li>
+      </ul>
+      <div class="callout">
+        <strong>Fraudulent applications:</strong> Providing false information on our Work Abroad or travel forms — including misrepresenting your identity, age, qualifications, or passport status — may result in termination of your application and forfeiture of any fees already paid, without refund.
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 6 -->
+    <div class="section" id="work-abroad">
+      <h2>6. Work Abroad Placement</h2>
+      <p>Our EU work placement service involves connecting clients with employers in Europe. The following terms apply:</p>
+      <ul>
+        <li>Submitting the online application form is the <strong>first step only</strong> and does not create a contract or guarantee placement.</li>
+        <li>After initial contact, you will be invited to visit our Accra office to discuss your options, confirm your package, and make payment.</li>
+        <li>We act as an intermediary between you and overseas employers. We do not ourselves employ you or act as your employer in the destination country.</li>
+        <li>All services related to visa processing, job placement, and travel arrangements are subject to the requirements and processing times of the relevant government authorities. We cannot guarantee specific timelines controlled by third parties.</li>
+        <li>You are responsible for ensuring you are medically fit to work abroad and meet any health or background-check requirements of the destination country.</li>
+        <li>You must provide accurate and complete documentation. We are not liable for delays or rejections caused by incomplete or incorrect documents.</li>
+      </ul>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 7 -->
+    <div class="section" id="fees-payment">
+      <h2>7. Fees and Payment</h2>
+      <ul>
+        <li>Submitting an enquiry or application on this website is <strong>free</strong>. No payment is requested online.</li>
+        <li>Service fees are disclosed and agreed upon at our office during your in-person consultation before any payment is made.</li>
+        <li>We do not take payment over WhatsApp, through third parties, or via bank transfers to individuals. All official payments are received at our Accra office.</li>
+        <li>Refund terms are communicated at the time your service package is confirmed. Refund eligibility may vary depending on how far along the process has progressed at the time of cancellation.</li>
+      </ul>
+      <div class="callout">
+        <strong>Beware of fraud:</strong> If anyone claims to represent Rogernort and requests payment outside our official office channels, please contact us immediately at <a href="https://wa.me/233559499248">+233 55 949 9248</a> to verify.
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 8 -->
+    <div class="section" id="no-guarantees">
+      <h2>8. No Guarantees</h2>
+      <p>While we work diligently to deliver successful outcomes for every client, we cannot guarantee:</p>
+      <ul>
+        <li>That a visa or work permit application will be approved by a government authority.</li>
+        <li>That a specific job position will still be available by the time your process is completed.</li>
+        <li>That travel plans will be unaffected by external factors such as flight cancellations, natural events, or changes in entry requirements.</li>
+        <li>That the website will be available at all times without interruption or error.</li>
+      </ul>
+      <p>We commit to acting in good faith, using our expertise and established partnerships to give every client the best possible chance of a successful outcome.</p>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 9 -->
+    <div class="section" id="liability">
+      <h2>9. Limitation of Liability</h2>
+      <p>
+        To the maximum extent permitted by applicable law, Rogernort Travel &amp; Tour shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to:
+      </p>
+      <ul>
+        <li>Loss of income or employment opportunity resulting from a visa refusal or placement failure beyond our control.</li>
+        <li>Losses arising from delays caused by third parties, including airlines, embassies, or employers.</li>
+        <li>Losses arising from inaccurate information provided by the client.</li>
+        <li>Any damages arising from your use of or inability to use this website.</li>
+      </ul>
+      <p>Our total liability to you for any claim arising from our services shall not exceed the total fees paid by you to Rogernort Travel &amp; Tour for the specific service in question.</p>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 10 -->
+    <div class="section" id="ip">
+      <h2>10. Intellectual Property</h2>
+      <p>
+        All content on this website — including the Rogernort name, logo, globe-and-plane design, written copy, layout, and design elements — is the property of Rogernort Travel &amp; Tour and is protected by applicable intellectual property law.
+      </p>
+      <p>You may not reproduce, copy, republish, or commercially exploit any part of this site without our express written permission.</p>
+      <p>Travel destination photography displayed on this site is licensed from Unsplash and is used in accordance with the Unsplash License.</p>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 11 -->
+    <div class="section" id="third-party">
+      <h2>11. Third-Party Links and Content</h2>
+      <p>This website may link to or reference external websites or services (e.g., WhatsApp, Google Maps). We are not responsible for the content, privacy practices, or availability of those third-party sites. Their use is subject to their own terms and privacy policies.</p>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 12 -->
+    <div class="section" id="governing-law">
+      <h2>12. Governing Law</h2>
+      <p>
+        These Terms of Use are governed by and construed in accordance with the laws of the <strong>Republic of Ghana</strong>. Any disputes arising from these terms or your use of our services shall be subject to the jurisdiction of the courts of Ghana.
+      </p>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 13 -->
+    <div class="section" id="changes">
+      <h2>13. Changes to These Terms</h2>
+      <p>
+        We may update these Terms of Use from time to time. When we do, we will update the "Last updated" date at the top of this page. We encourage you to review these terms periodically. Your continued use of the website after changes are posted constitutes your acceptance of the revised terms.
+      </p>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- 14 -->
+    <div class="section" id="contact-us">
+      <h2>14. Contact Us</h2>
+      <p>Questions about these terms? Reach us at:</p>
+      <ul>
+        <li><strong>Email:</strong> <a href="mailto:akwaabatoursa@gmail.com">akwaabatoursa@gmail.com</a></li>
+        <li><strong>WhatsApp:</strong> <a href="https://wa.me/233559499248">+233 55 949 9248</a></li>
+        <li><strong>Office:</strong> Adenta New Legon Transformer, Accra, Ghana</li>
+        <li><strong>Hours:</strong> Mon–Fri 8:00AM–6:00PM · Sat 9:00AM–3:00PM</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <footer class="foot">
+    <p>© 2026 Rogernort Travel &amp; Tour. All rights reserved.</p>
+    <a href="/">Home</a>
+    <a href="/privacy-policy.html">Privacy Policy</a>
+    <a href="/terms.html">Terms of Use</a>
+  </footer>
+
+</body>
+</html>

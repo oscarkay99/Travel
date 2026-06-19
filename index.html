@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rogernort Travel &amp; Tour — Wander Further. Live Deeper.</title>
+  <title>Rogernort Travel &amp; Tour — Your Travel, Our Priority</title>
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
@@ -145,13 +145,22 @@
       display: flex; align-items: center; justify-content: center;
       overflow: hidden;
     }
-    .hero-bg {
+    .hero-video {
       position: absolute; inset: 0;
-      background: url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1920&q=85') center/cover no-repeat;
-      transform: scale(1.06);
-      transition: transform 9s cubic-bezier(.25,.46,.45,.94);
+      overflow: hidden;
     }
-    .hero-bg.ready { transform: scale(1); }
+    .hero-video video {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 1.4s ease;
+      transform: scale(1.04);
+      transition: opacity 1.4s ease, transform 12s cubic-bezier(.25,.46,.45,.94);
+    }
+    .hero-video video.ready {
+      opacity: 1;
+      transform: scale(1);
+    }
     .hero-dim {
       position: absolute; inset: 0;
       background: linear-gradient(
@@ -233,45 +242,6 @@
       50%      { transform: translateX(-50%) translateY(7px); }
     }
 
-    /* ─── SEARCH BAR ─── */
-    .search-wrap {
-      background: var(--white);
-      border-bottom: 1px solid var(--border);
-      padding: 0 40px;
-      box-shadow: 0 4px 24px rgba(13,30,61,.06);
-    }
-    .search-inner {
-      max-width: 1160px; margin: 0 auto;
-      display: grid; grid-template-columns: 1fr 1fr 1fr auto;
-      gap: 0; align-items: stretch;
-    }
-    .sf {
-      padding: 20px 24px; border-right: 1px solid var(--border);
-      display: flex; flex-direction: column; gap: 5px;
-    }
-    .sf:last-of-type { border-right: none; }
-    .sf label {
-      font-size: .68rem; font-weight: 700;
-      letter-spacing: 1.2px; text-transform: uppercase;
-      color: var(--ink-3);
-    }
-    .sf input, .sf select {
-      border: none; outline: none; background: none;
-      font-family: inherit; font-size: .9rem;
-      font-weight: 500; color: var(--ink);
-      padding: 0; width: 100%;
-    }
-    .sf input::placeholder { color: #b0bbcc; font-weight: 400; }
-    .sf select option { background: #fff; }
-    .search-btn {
-      padding: 0 30px;
-      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-l) 100%);
-      color: #fff;
-      font-size: .85rem; font-weight: 700;
-      border: none; display: flex; align-items: center; gap: 8px;
-      transition: opacity .2s;
-    }
-    .search-btn:hover { opacity: .88; }
 
     /* ─── SECTIONS ─── */
     .section { padding: 100px 40px; }
@@ -476,7 +446,6 @@
     .tc:hover { transform: translateY(-5px); box-shadow: 0 20px 52px rgba(13,30,61,.1); }
     .tc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
     .tc-user { display: flex; align-items: center; gap: 12px; }
-    .tc-ava { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 2px solid var(--border); }
     .tc-name { font-size: .88rem; font-weight: 700; color: var(--navy); }
     .tc-dest { font-size: .75rem; color: var(--ink-3); margin-top: 2px; }
     .tc-stars { color: var(--orange); font-size: .72rem; letter-spacing: 1px; }
@@ -713,10 +682,6 @@
       .testi-grid { grid-template-columns: 1fr; }
       .cta-box { grid-template-columns: 1fr; padding: 52px 40px; gap: 36px; }
       .section, .stats-bg, .cta-wrap { padding-left: 24px; padding-right: 24px; }
-      .search-wrap { padding: 0 24px; }
-      .search-inner { grid-template-columns: 1fr; }
-      .sf { border-right: none; border-bottom: 1px solid var(--border); padding: 16px 20px; }
-      .search-btn { padding: 16px 20px; justify-content: center; }
     }
     @media (max-width: 580px) {
       .mosaic { grid-template-columns: 1fr; }
@@ -731,9 +696,173 @@
     }
 
     .sr { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+    /* ─── PRELOADER ─── */
+    #preloader {
+      position: fixed; inset: 0; z-index: 9999;
+      background: var(--dark);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 32px;
+      transition: opacity .7s ease, visibility .7s ease;
+    }
+    #preloader.done { opacity: 0; visibility: hidden; }
+    #preloader img { height: 80px; width: auto; opacity: .92; animation: pre-pulse 2s ease-in-out infinite; }
+    @keyframes pre-pulse { 0%,100%{opacity:.7;transform:scale(1)} 50%{opacity:1;transform:scale(1.04)} }
+    .pre-bar {
+      width: 160px; height: 2px;
+      background: rgba(255,255,255,.1);
+      border-radius: 2px; overflow: hidden;
+    }
+    .pre-fill {
+      height: 100%; width: 0;
+      background: linear-gradient(90deg, var(--cyan), var(--cyan-l));
+      border-radius: 2px;
+      animation: pre-load 1.6s cubic-bezier(.4,0,.2,1) forwards;
+    }
+    @keyframes pre-load { to { width: 100%; } }
+
+    /* ─── FLOATING WHATSAPP ─── */
+    .wa-float {
+      position: fixed; bottom: 28px; right: 28px;
+      z-index: 800;
+      width: 58px; height: 58px; border-radius: 50%;
+      background: #25D366;
+      display: grid; place-items: center;
+      box-shadow: 0 8px 28px rgba(37,211,102,.45);
+      transition: transform .25s var(--ease), box-shadow .25s var(--ease);
+    }
+    .wa-float:hover { transform: scale(1.12) translateY(-2px); box-shadow: 0 14px 36px rgba(37,211,102,.55); }
+    .wa-float svg { width: 30px; height: 30px; color: #fff; }
+    .wa-float::before {
+      content: '';
+      position: absolute; inset: -4px; border-radius: 50%;
+      border: 2px solid rgba(37,211,102,.4);
+      animation: wa-ping 2.4s ease-out infinite;
+    }
+    @keyframes wa-ping {
+      0% { transform: scale(1); opacity: .8; }
+      100% { transform: scale(1.55); opacity: 0; }
+    }
+
+    /* ─── LIGHTBOX ─── */
+    .lightbox {
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(5,10,25,.96);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden;
+      transition: opacity .35s ease, visibility .35s ease;
+    }
+    .lightbox.open { opacity: 1; visibility: visible; }
+    .lb-img-wrap {
+      position: relative; max-width: 90vw; max-height: 88vh;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .lb-img-wrap img {
+      max-width: 90vw; max-height: 80vh;
+      object-fit: contain; border-radius: 10px;
+      transform: scale(.94); opacity: 0;
+      transition: transform .4s var(--ease-out), opacity .4s ease;
+    }
+    .lightbox.open .lb-img-wrap img { transform: scale(1); opacity: 1; }
+    .lb-caption {
+      margin-top: 16px; font-size: .82rem; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      color: rgba(255,255,255,.5);
+    }
+    .lb-close {
+      position: fixed; top: 24px; right: 28px;
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,.15);
+      background: rgba(255,255,255,.07);
+      color: #fff; font-size: 1.4rem; line-height: 1;
+      display: grid; place-items: center;
+      cursor: pointer; transition: background .2s;
+    }
+    .lb-close:hover { background: rgba(255,255,255,.18); }
+    .lb-prev, .lb-next {
+      position: fixed; top: 50%; transform: translateY(-50%);
+      width: 50px; height: 50px; border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,.15);
+      background: rgba(255,255,255,.07);
+      color: #fff; font-size: 1.6rem; line-height: 1;
+      display: grid; place-items: center;
+      cursor: pointer; transition: background .2s;
+    }
+    .lb-prev { left: 20px; }
+    .lb-next { right: 20px; }
+    .lb-prev:hover, .lb-next:hover { background: rgba(255,255,255,.18); }
+
+    /* ─── ENHANCED INTERACTIONS ─── */
+    html { scroll-behavior: smooth; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--dark); }
+    ::-webkit-scrollbar-thumb { background: var(--navy-l); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--cyan-d); }
+
+    .card, .tc, .country-card, .pillar, .gp {
+      will-change: transform;
+    }
+    .gp { cursor: zoom-in; }
+
+    /* Section label line animation */
+    .label::before {
+      transition: width .4s var(--ease);
+    }
+    .label:hover::before { width: 36px; }
+
+    /* ─── COOKIE BANNER ─── */
+    #cookieBanner {
+      position: fixed; bottom: 20px; left: 20px;
+      max-width: 420px;
+      background: var(--dark);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 16px;
+      padding: 22px 24px;
+      z-index: 950;
+      box-shadow: 0 20px 60px rgba(0,0,0,.45);
+      transform: translateY(120%);
+      opacity: 0;
+      transition: transform .4s var(--ease), opacity .4s ease;
+    }
+    #cookieBanner.show { transform: none; opacity: 1; }
+    #cookieBanner p {
+      font-size: .82rem; color: rgba(255,255,255,.55); line-height: 1.7;
+      margin-bottom: 16px;
+    }
+    #cookieBanner a { color: var(--cyan); }
+    .cookie-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+    .cookie-accept {
+      background: linear-gradient(135deg, var(--cyan) 0%, var(--cyan-d) 100%);
+      color: #fff; font-size: .8rem; font-weight: 700;
+      padding: 10px 22px; border-radius: 9px; border: none;
+      cursor: pointer; transition: opacity .2s;
+    }
+    .cookie-accept:hover { opacity: .88; }
+    .cookie-decline {
+      background: rgba(255,255,255,.07);
+      color: rgba(255,255,255,.45); font-size: .8rem; font-weight: 600;
+      padding: 10px 18px; border-radius: 9px;
+      border: 1px solid rgba(255,255,255,.1);
+      cursor: pointer; transition: background .2s;
+    }
+    .cookie-decline:hover { background: rgba(255,255,255,.12); }
+
+    /* ─── MAINTENANCE BANNER ─── */
+    #maintBanner {
+      background: #f5a623; color: #1a2340;
+      text-align: center; padding: 11px 24px;
+      font-size: .82rem; font-weight: 700;
+      position: relative; z-index: 1000;
+    }
+    #maintBanner a { color: #1a2340; text-decoration: underline; }
   </style>
 </head>
 <body>
+
+  <!-- ══ MAINTENANCE BANNER (set MAINTENANCE_MODE = true to enable) ══ -->
+  <div id="maintBanner" style="display:none;">
+    We are currently performing scheduled maintenance. The site will be back shortly. For urgent enquiries, WhatsApp us at <a href="https://wa.me/233559499248">+233 55 949 9248</a>.
+  </div>
 
   <!-- ══ NAV ══ -->
   <nav class="nav over-hero" id="nav" role="navigation" aria-label="Main navigation">
@@ -767,7 +896,14 @@
   <!-- ══ HERO ══ -->
   <section id="home" aria-labelledby="hero-h1">
     <div class="hero">
-      <div class="hero-bg" id="heroBg"></div>
+      <div class="hero-video">
+        <video id="heroVideo" autoplay loop muted playsinline
+          poster="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1920&q=85">
+          <source src="https://assets.mixkit.co/videos/5363/5363-720.mp4" type="video/mp4">
+          <source src="https://assets.mixkit.co/videos/5371/5371-720.mp4" type="video/mp4">
+          <source src="https://assets.mixkit.co/videos/4999/4999-720.mp4" type="video/mp4">
+        </video>
+      </div>
       <div class="hero-dim"></div>
       <div class="hero-swoosh"></div>
       <div class="hero-content">
@@ -776,10 +912,10 @@
           Premium Travel Experiences
         </div>
         <h1 class="hero-h1" id="hero-h1">
-          Wander <i>Further.</i><br>Live Deeper.
+          Your Travel,<br><i>Our Priority.</i>
         </h1>
         <p class="hero-p">
-          Step beyond the ordinary. Rogernort crafts bespoke journeys to the world's most extraordinary places — tailored entirely around you.
+          Step beyond the ordinary. Rogernort crafts bespoke journeys to the world's most extraordinary places, tailored entirely around you.
         </p>
         <div class="hero-btns">
           <a href="#destinations" class="btn-fill">
@@ -798,32 +934,6 @@
       </div>
     </div>
 
-    <!-- Search bar -->
-    <div class="search-wrap">
-      <div class="search-inner">
-        <div class="sf">
-          <label for="s-where">Where to?</label>
-          <input type="text" id="s-where" placeholder="City, country or region" />
-        </div>
-        <div class="sf">
-          <label for="s-depart">Departure</label>
-          <input type="date" id="s-depart" />
-        </div>
-        <div class="sf">
-          <label for="s-guests">Travelers</label>
-          <select id="s-guests" aria-label="Number of travelers">
-            <option>1 Traveler</option>
-            <option>2 Travelers</option>
-            <option>3–4 Travelers</option>
-            <option>Group (5+)</option>
-          </select>
-        </div>
-        <button class="search-btn" type="button">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          Search
-        </button>
-      </div>
-    </div>
   </section>
 
   <!-- ══ PILLARS ══ -->
@@ -832,7 +942,7 @@
       <div style="max-width:600px;">
         <div class="label">How We Work</div>
         <h2 class="display" id="pillars-h">Every Journey,<br>Crafted Just for You</h2>
-        <p class="body-text">We don't sell packages off a shelf. We listen, we design, and we deliver — bespoke travel built around your pace, your passions, and your budget.</p>
+        <p class="body-text">We don't sell packages off a shelf. We listen, we design, and we deliver, bespoke travel built around your pace, your passions, and your budget.</p>
       </div>
       <div class="pillars-grid">
         <div class="pillar r d1">
@@ -841,7 +951,7 @@
           </div>
           <div class="pillar-num">01</div>
           <h3>Tailor-Made Itineraries</h3>
-          <p>No two travelers are alike. We build your journey from scratch — hand-selecting every hotel, activity, and transfer to match exactly what you're looking for.</p>
+          <p>No two travelers are alike. We build your journey from scratch, hand-selecting every hotel, activity, and transfer to match exactly what you're looking for.</p>
         </div>
         <div class="pillar r d2">
           <div class="pillar-icon">
@@ -849,7 +959,7 @@
           </div>
           <div class="pillar-num">02</div>
           <h3>Vetted Local Experts</h3>
-          <p>Our on-the-ground partners are curated, tested, and trusted. From private guides in Kyoto to yacht charters in the Maldives — quality is never compromised.</p>
+          <p>Our on-the-ground partners are curated, tested, and trusted. From private guides in Kyoto to yacht charters in the Maldives, quality is never compromised.</p>
         </div>
         <div class="pillar r d3">
           <div class="pillar-icon">
@@ -857,7 +967,7 @@
           </div>
           <div class="pillar-num">03</div>
           <h3>Zero Stress, All Experience</h3>
-          <p>From the moment you land to the minute you're home, we handle every detail — visas, transfers, reservations — so your only job is to enjoy every second.</p>
+          <p>From the moment you land to the minute you're home, we handle every detail, visas, transfers, reservations, so your only job is to enjoy every second.</p>
         </div>
       </div>
     </div>
@@ -1062,7 +1172,6 @@
         <div class="tc r d1">
           <div class="tc-head">
             <div class="tc-user">
-              <img class="tc-ava" src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=88&h=88&fit=crop&q=80" alt="Amara Diallo" />
               <div>
                 <div class="tc-name">Amara Diallo</div>
                 <div class="tc-dest">Maldives · Private Villa</div>
@@ -1070,7 +1179,7 @@
             </div>
             <div class="tc-stars" aria-label="5 stars">★★★★★</div>
           </div>
-          <p class="tc-text">Rogernort planned our honeymoon down to the last detail. The overwater villa, the sunset dinner on the sandbank, the private snorkeling excursion — I didn't have to think once. Pure magic.</p>
+          <p class="tc-text">Rogernort planned our honeymoon down to the last detail. The overwater villa, the sunset dinner on the sandbank, the private snorkeling excursion, I didn't have to think once. Pure magic.</p>
           <div class="tc-foot">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
             Reviewed on Google
@@ -1080,7 +1189,6 @@
         <div class="tc r d2">
           <div class="tc-head">
             <div class="tc-user">
-              <img class="tc-ava" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=88&h=88&fit=crop&q=80" alt="Marcus Osei" />
               <div>
                 <div class="tc-name">Marcus Osei</div>
                 <div class="tc-dest">Japan · 14-Day Cultural Tour</div>
@@ -1098,7 +1206,6 @@
         <div class="tc r d3">
           <div class="tc-head">
             <div class="tc-user">
-              <img class="tc-ava" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=88&h=88&fit=crop&q=80" alt="Priya Mensah" />
               <div>
                 <div class="tc-name">Priya Mensah</div>
                 <div class="tc-dest">Santorini · 10-Day Greece</div>
@@ -1116,7 +1223,6 @@
         <div class="tc r d1">
           <div class="tc-head">
             <div class="tc-user">
-              <img class="tc-ava" src="https://images.unsplash.com/photo-1545871836-7e91d3b04bc5?w=88&h=88&fit=crop&q=80" alt="Kweku Boateng" />
               <div>
                 <div class="tc-name">Kweku Boateng</div>
                 <div class="tc-dest">Bali · Family Retreat</div>
@@ -1124,7 +1230,7 @@
             </div>
             <div class="tc-stars" aria-label="5 stars">★★★★★</div>
           </div>
-          <p class="tc-text">Traveling with three kids felt impossible — until Rogernort stepped in. They found us a villa with a private pool, organised kid-friendly cooking classes, and even arranged a firefly river cruise. The kids still talk about it.</p>
+          <p class="tc-text">Traveling with three kids felt impossible, until Rogernort stepped in. They found us a villa with a private pool, organised kid-friendly cooking classes, and even arranged a firefly river cruise. The kids still talk about it.</p>
           <div class="tc-foot">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
             Reviewed on Google
@@ -1134,7 +1240,6 @@
         <div class="tc r d2">
           <div class="tc-head">
             <div class="tc-user">
-              <img class="tc-ava" src="https://images.unsplash.com/photo-1589156280159-27698a70f29e?w=88&h=88&fit=crop&q=80" alt="Serena Owusu" />
               <div>
                 <div class="tc-name">Serena Owusu</div>
                 <div class="tc-dest">Cape Town · 8 Days</div>
@@ -1152,7 +1257,6 @@
         <div class="tc r d3">
           <div class="tc-head">
             <div class="tc-user">
-              <img class="tc-ava" src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=88&h=88&fit=crop&q=80" alt="Nii Adama" />
               <div>
                 <div class="tc-name">Nii Adama</div>
                 <div class="tc-dest">Peru · Machu Picchu Trek</div>
@@ -1185,73 +1289,65 @@
       <div class="country-grid">
 
         <div class="country-card r d1">
-          <div class="country-flag">🇱🇺</div>
-          <div class="country-name">Luxembourg</div>
+          <div class="country-flag">🇨🇿</div>
+          <div class="country-name">Czech Republic</div>
           <div class="country-roles">
-            <span class="role-tag">Construction</span>
-            <span class="role-tag">Healthcare</span>
-            <span class="role-tag">Finance</span>
-            <span class="role-tag">Hospitality</span>
+            <span class="role-tag">Factory Work</span>
+            <span class="role-tag">Warehouse</span>
+            <span class="role-tag">Farm Jobs</span>
           </div>
           <div class="country-spots"><span></span> Positions available</div>
         </div>
 
         <div class="country-card r d2">
-          <div class="country-flag">🇨🇿</div>
-          <div class="country-name">Czech Republic</div>
+          <div class="country-flag">🇱🇹</div>
+          <div class="country-name">Lithuania</div>
           <div class="country-roles">
-            <span class="role-tag">Manufacturing</span>
-            <span class="role-tag">Logistics</span>
-            <span class="role-tag">IT Support</span>
-            <span class="role-tag">Warehousing</span>
+            <span class="role-tag">Factory Work</span>
+            <span class="role-tag">Warehouse</span>
+            <span class="role-tag">Farm Jobs</span>
           </div>
           <div class="country-spots"><span></span> Positions available</div>
         </div>
 
         <div class="country-card r d3">
-          <div class="country-flag">🇳🇿</div>
-          <div class="country-name">New Zealand</div>
+          <div class="country-flag">🇸🇰</div>
+          <div class="country-name">Slovakia</div>
           <div class="country-roles">
-            <span class="role-tag">Agriculture</span>
-            <span class="role-tag">Healthcare</span>
-            <span class="role-tag">Construction</span>
-            <span class="role-tag">Hospitality</span>
+            <span class="role-tag">Factory Work</span>
+            <span class="role-tag">Restaurant (Ladies)</span>
+            <span class="role-tag">Farm Jobs</span>
           </div>
           <div class="country-spots"><span></span> Positions available</div>
         </div>
 
         <div class="country-card r d1">
-          <div class="country-flag">🇩🇪</div>
-          <div class="country-name">Germany</div>
+          <div class="country-flag">🇷🇴</div>
+          <div class="country-name">Romania</div>
           <div class="country-roles">
-            <span class="role-tag">Engineering</span>
-            <span class="role-tag">Care Work</span>
-            <span class="role-tag">Manufacturing</span>
-            <span class="role-tag">Driving</span>
+            <span class="role-tag">Factory Work</span>
+            <span class="role-tag">Warehouse</span>
+            <span class="role-tag">Farm Jobs</span>
           </div>
           <div class="country-spots"><span></span> Positions available</div>
         </div>
 
         <div class="country-card r d2">
-          <div class="country-flag">🇳🇱</div>
-          <div class="country-name">Netherlands</div>
+          <div class="country-flag">🇵🇱</div>
+          <div class="country-name">Poland</div>
           <div class="country-roles">
-            <span class="role-tag">Horticulture</span>
-            <span class="role-tag">Food Processing</span>
-            <span class="role-tag">Logistics</span>
-            <span class="role-tag">Cleaning</span>
+            <span class="role-tag">Factory Work</span>
+            <span class="role-tag">Warehouse</span>
+            <span class="role-tag">Farm Jobs</span>
           </div>
           <div class="country-spots"><span></span> Positions available</div>
         </div>
 
         <div class="country-card r d3">
-          <div class="country-flag">🇵🇱</div>
-          <div class="country-name">Poland</div>
+          <div class="country-flag">🇱🇺</div>
+          <div class="country-name">Luxembourg</div>
           <div class="country-roles">
-            <span class="role-tag">Construction</span>
-            <span class="role-tag">Agriculture</span>
-            <span class="role-tag">Manufacturing</span>
-            <span class="role-tag">Welding</span>
+            <span class="role-tag">Factory Hand Work</span>
           </div>
           <div class="country-spots"><span></span> Positions available</div>
         </div>
@@ -1268,7 +1364,7 @@
               <div class="step-num">1</div>
               <div class="step-text">
                 <strong>Submit Your Application</strong>
-                <span>Fill in your details — takes less than 2 minutes</span>
+                <span>Fill in your details, takes less than 2 minutes</span>
               </div>
             </div>
             <div class="apply-step">
@@ -1328,12 +1424,12 @@
                 <label for="ap-country">Preferred Country *</label>
                 <select id="ap-country" required>
                   <option value="">Select country…</option>
-                  <option>Luxembourg</option>
                   <option>Czech Republic</option>
-                  <option>New Zealand</option>
-                  <option>Germany</option>
-                  <option>Netherlands</option>
+                  <option>Lithuania</option>
+                  <option>Slovakia</option>
+                  <option>Romania</option>
                   <option>Poland</option>
+                  <option>Luxembourg</option>
                   <option>Other</option>
                 </select>
               </div>
@@ -1359,7 +1455,7 @@
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
               Submit My Application
             </button>
-            <p class="af-note">Your details are sent securely to our team. We'll contact you within 24 hours.</p>
+            <p class="af-note">Your details are sent securely to our team. We'll contact you within 24 hours. By submitting, you agree to our <a href="/privacy-policy.html" target="_blank" style="color:var(--cyan-d);">Privacy Policy</a> and <a href="/terms.html" target="_blank" style="color:var(--cyan-d);">Terms of Use</a>.</p>
           </form>
         </div>
       </div>
@@ -1387,7 +1483,7 @@
           <input type="text" id="plan-dest" placeholder="Dream destination" />
           <button type="submit" id="plan-btn">Send My Request</button>
         </form>
-        <p class="cta-note">We'll get back to you within 24 hours. No commitment needed.</p>
+        <p class="cta-note">We'll get back to you within 24 hours. No commitment needed. By submitting, you agree to our <a href="/privacy-policy.html" target="_blank" style="color:rgba(255,255,255,.4);">Privacy Policy</a>.</p>
       </div>
     </div>
   </div>
@@ -1397,7 +1493,7 @@
     <div class="foot-grid">
       <div class="foot-about">
         <img src="photos/e9645b58-be3c-4974-8a03-0b34352a88e8.png" alt="Rogernort Travel and Tour" class="foot-logo-img" />
-        <p>Crafting bespoke travel experiences for the curious, the adventurous, and the luxury-minded — since 2015. Every trip is a story worth telling.</p>
+        <p>Crafting bespoke travel experiences for the curious, the adventurous, and the luxury-minded, since 2015. Every trip is a story worth telling.</p>
         <div class="foot-socials">
           <a href="#" class="foot-soc" aria-label="Instagram">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
@@ -1465,12 +1561,45 @@
     <div class="foot-bar">
       <p>© 2026 Rogernort Travel &amp; Tour. All rights reserved.</p>
       <nav class="foot-bar-links" aria-label="Legal">
-        <a href="#">Privacy Policy</a>
-        <a href="#">Terms of Use</a>
-        <a href="#">Cookie Settings</a>
+        <a href="/privacy-policy.html">Privacy Policy</a>
+        <a href="/terms.html">Terms of Use</a>
+        <a href="#" id="cookieSettingsBtn">Cookie Settings</a>
       </nav>
     </div>
   </footer>
+
+  <!-- ══ COOKIE BANNER ══ -->
+  <div id="cookieBanner" role="dialog" aria-label="Cookie notice" aria-live="polite">
+    <p>
+      We use essential browser storage (localStorage) to remember your preferences. We don't use advertising or tracking cookies. See our <a href="/privacy-policy.html#cookies">Cookie Policy</a> for details.
+    </p>
+    <div class="cookie-btns">
+      <button class="cookie-accept" id="cookieAccept">Got it</button>
+      <button class="cookie-decline" id="cookieDecline">Decline non-essential</button>
+    </div>
+  </div>
+
+  <!-- ══ PRELOADER ══ -->
+  <div id="preloader" role="status" aria-label="Loading">
+    <img src="photos/e9645b58-be3c-4974-8a03-0b34352a88e8.png" alt="Rogernort Travel" />
+    <div class="pre-bar"><div class="pre-fill"></div></div>
+  </div>
+
+  <!-- ══ FLOATING WHATSAPP ══ -->
+  <a href="https://wa.me/233559499248" class="wa-float" target="_blank" rel="noopener noreferrer" aria-label="Chat with us on WhatsApp">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+  </a>
+
+  <!-- ══ LIGHTBOX ══ -->
+  <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer">
+    <button class="lb-close" id="lbClose" aria-label="Close lightbox">&#x2715;</button>
+    <button class="lb-prev" id="lbPrev" aria-label="Previous image">&#8249;</button>
+    <div class="lb-img-wrap">
+      <img id="lbImg" src="" alt="" />
+      <div class="lb-caption" id="lbCaption"></div>
+    </div>
+    <button class="lb-next" id="lbNext" aria-label="Next image">&#8250;</button>
+  </div>
 
   <script>
     // ── Nav scroll state ──
@@ -1484,10 +1613,28 @@
     window.addEventListener('scroll', tickNav, { passive: true });
     tickNav();
 
-    // ── Hero Ken Burns ──
-    window.addEventListener('load', () => {
-      document.getElementById('heroBg')?.classList.add('ready');
-    });
+    // ── Preloader ──
+    const preloader = document.getElementById('preloader');
+    const heroVideo = document.getElementById('heroVideo');
+
+    function dismissPreloader() {
+      preloader.classList.add('done');
+    }
+    // Dismiss after video can play, or after 2.2s max
+    if (heroVideo) {
+      heroVideo.addEventListener('canplay', () => {
+        heroVideo.classList.add('ready');
+        setTimeout(dismissPreloader, 300);
+      }, { once: true });
+    }
+    setTimeout(dismissPreloader, 2200);
+
+    // ── Hero video ready ──
+    if (heroVideo) {
+      heroVideo.addEventListener('loadeddata', () => {
+        heroVideo.classList.add('ready');
+      }, { once: true });
+    }
 
     // ── Burger ──
     const burger = document.getElementById('burger');
@@ -1601,6 +1748,7 @@
       if (!email) return;
       btn.textContent = 'Sending…';
       btn.disabled = true;
+
       try {
         await fetch('/api/enquire', {
           method: 'POST',
@@ -1608,6 +1756,17 @@
           body: JSON.stringify({ name, email, destination })
         });
       } catch (_) {}
+
+      // Open WhatsApp with enquiry details
+      const msg = encodeURIComponent(
+        `✈️ *NEW TRIP ENQUIRY*\n\n` +
+        `👤 *Name:* ${name || 'Not provided'}\n` +
+        `📧 *Email:* ${email}\n` +
+        `🌍 *Destination:* ${destination || 'Not specified'}\n\n` +
+        `_Sent from rogernortconsult.com_`
+      );
+      window.open(`https://wa.me/233559499248?text=${msg}`, '_blank');
+
       btn.textContent = 'Request Sent ✓';
       btn.style.background = '#22c55e';
       e.target.querySelectorAll('input').forEach(i => i.value = '');
@@ -1670,9 +1829,7 @@
       const delays = ['d1', 'd2', 'd3', 'd1', 'd2', 'd3'];
       grid.innerHTML = rows.slice(0, 6).map((t, i) => {
         const stars = '★'.repeat(Math.max(1, Math.min(5, t.rating || 5)));
-        const ava = t.avatar_url
-          ? `<img class="tc-ava" src="${t.avatar_url}" alt="${t.name}" loading="lazy" />`
-          : `<div class="tc-ava" style="background:#1c3669;color:#fff;display:grid;place-items:center;font-weight:700;font-size:18px;border-radius:50%;">${t.name.charAt(0)}</div>`;
+        const ava = '';
         return `<div class="tc r ${delays[i]}">
           <div class="tc-head">
             <div class="tc-user">
@@ -1706,6 +1863,84 @@
       }).join('');
       grid.querySelectorAll('.r').forEach(el => revealObs && revealObs.observe(el));
     }
+
+    // ── Lightbox ──
+    (() => {
+      const lb = document.getElementById('lightbox');
+      const lbImg = document.getElementById('lbImg');
+      const lbCaption = document.getElementById('lbCaption');
+      const lbClose = document.getElementById('lbClose');
+      const lbPrev = document.getElementById('lbPrev');
+      const lbNext = document.getElementById('lbNext');
+      const panels = Array.from(document.querySelectorAll('.gp'));
+      let cur = 0;
+
+      function openLb(i) {
+        cur = i;
+        const img = panels[i].querySelector('img');
+        const label = panels[i].querySelector('.gp-label');
+        lbImg.src = img.src.replace(/w=\d+/, 'w=1600');
+        lbImg.alt = img.alt;
+        lbCaption.textContent = label ? label.textContent : '';
+        lb.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        lbImg.focus();
+      }
+      function closeLb() {
+        lb.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+      function goNext() { openLb((cur + 1) % panels.length); }
+      function goPrev() { openLb((cur - 1 + panels.length) % panels.length); }
+
+      panels.forEach((p, i) => p.addEventListener('click', e => { e.preventDefault(); openLb(i); }));
+      lbClose.addEventListener('click', closeLb);
+      lbPrev.addEventListener('click', goPrev);
+      lbNext.addEventListener('click', goNext);
+      lb.addEventListener('click', e => { if (e.target === lb) closeLb(); });
+      document.addEventListener('keydown', e => {
+        if (!lb.classList.contains('open')) return;
+        if (e.key === 'Escape') closeLb();
+        if (e.key === 'ArrowRight') goNext();
+        if (e.key === 'ArrowLeft') goPrev();
+      });
+    })();
+
+    // ── Maintenance mode ──
+    // Set to true to show the maintenance banner sitewide
+    const MAINTENANCE_MODE = false;
+    if (MAINTENANCE_MODE) {
+      document.getElementById('maintBanner').style.display = 'block';
+    }
+
+    // ── Cookie consent ──
+    const cookieBanner = document.getElementById('cookieBanner');
+    const cookieKey = 'rn_cookie_consent';
+
+    function showCookieBanner() {
+      setTimeout(() => cookieBanner.classList.add('show'), 1200);
+    }
+    function hideCookieBanner() {
+      cookieBanner.classList.remove('show');
+    }
+
+    if (!localStorage.getItem(cookieKey)) {
+      showCookieBanner();
+    }
+
+    document.getElementById('cookieAccept').addEventListener('click', () => {
+      localStorage.setItem(cookieKey, 'accepted');
+      hideCookieBanner();
+    });
+    document.getElementById('cookieDecline').addEventListener('click', () => {
+      localStorage.setItem(cookieKey, 'declined');
+      hideCookieBanner();
+    });
+    document.getElementById('cookieSettingsBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem(cookieKey);
+      showCookieBanner();
+    });
 
     window.addEventListener('load', async () => {
       const [dests, testis, countries] = await Promise.all([
