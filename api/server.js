@@ -51,8 +51,8 @@ const server = http.createServer(async (req, res) => {
 
       // ── Trip Enquiry (CTA form) ──
       if (req.url === '/api/enquire') {
-        const { name, email, destination } = data;
-        await supaInsert('enquiries', { name: name || null, email, destination: destination || null });
+        const { name, email, phone, destination } = data;
+        await supaInsert('enquiries', { name: name || null, email, phone: phone || null, destination: destination || null });
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true }));
         return;
