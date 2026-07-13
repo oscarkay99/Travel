@@ -52,7 +52,12 @@ const server = http.createServer(async (req, res) => {
       // ── Trip Enquiry (CTA form) ──
       if (req.url === '/api/enquire') {
         const { name, email, phone, destination } = data;
-        await supaInsert('enquiries', { name: name || null, email, phone: phone || null, destination: destination || null });
+        if (!email || !phone) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'Email and phone are required.' }));
+          return;
+        }
+        await supaInsert('enquiries', { name: name || null, email, phone, destination: destination || null });
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true }));
         return;
@@ -61,6 +66,12 @@ const server = http.createServer(async (req, res) => {
       if (req.url !== '/api/apply') { res.writeHead(404); res.end('Not found'); return; }
 
       const { fname, lname, phone, age, email, country, passport, skills, note } = data;
+
+      if (!phone || !email) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Email and phone are required.' }));
+        return;
+      }
 
       const html = `
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#f4f6fb;padding:32px;">

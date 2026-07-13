@@ -1495,8 +1495,8 @@
               </div>
             </div>
             <div class="af-field">
-              <label for="ap-email">Email Address</label>
-              <input type="email" id="ap-email" placeholder="john@email.com" />
+              <label for="ap-email">Email Address *</label>
+              <input type="email" id="ap-email" placeholder="john@email.com" required />
             </div>
             <div class="af-row">
               <div class="af-field">
@@ -1559,7 +1559,7 @@
           <label for="plan-email" class="sr">Your email</label>
           <input type="email" id="plan-email" placeholder="Email address" required />
           <label for="plan-phone" class="sr">Phone / WhatsApp number</label>
-          <input type="tel" id="plan-phone" placeholder="Phone / WhatsApp number" />
+          <input type="tel" id="plan-phone" placeholder="Phone / WhatsApp number" required />
           <label for="plan-dest" class="sr">Dream destination</label>
           <input type="text" id="plan-dest" placeholder="Dream destination" />
           <button type="submit" id="plan-btn">Send My Request</button>
@@ -1821,7 +1821,7 @@
       const skills   = document.getElementById('ap-skills').value.trim();
       const note     = document.getElementById('ap-note').value.trim();
 
-      if (!fname || !lname || !phone || !age || !country || !skills) {
+      if (!fname || !lname || !phone || !age || !email || !country || !skills) {
         alert('Please fill in all required fields marked with *');
         return;
       }
@@ -1873,7 +1873,10 @@
       const email       = document.getElementById('plan-email').value.trim();
       const phone       = document.getElementById('plan-phone').value.trim();
       const destination = document.getElementById('plan-dest').value.trim();
-      if (!email) return;
+      if (!email || !phone) {
+        alert('Please provide both your email address and phone number.');
+        return;
+      }
       btn.textContent = 'Sending…';
       btn.disabled = true;
 
