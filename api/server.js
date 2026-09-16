@@ -97,7 +97,7 @@ const server = http.createServer(async (req, res) => {
               💬 Reply on WhatsApp
             </a>
           </div>
-          <p style="text-align:center;color:#b0bbcc;font-size:12px;margin-top:20px;">Rogernort Travel &amp; Tour · Adenta New Legon Transformer, Accra</p>
+          <p style="text-align:center;color:#b0bbcc;font-size:12px;margin-top:20px;">Rogernort Travel &amp; Tour · The Base, New Legon, Adenta</p>
         </div>`;
 
       const payload = JSON.stringify({
