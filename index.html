@@ -1913,9 +1913,14 @@
 
     function renderDestinations(rows) {
       const mosaic = document.querySelector('.mosaic');
-      if (!mosaic || !rows || !rows.length) return;
+      // Keep the complete built-in mosaic when the CMS response is incomplete
+      // or contains a malformed image path. This prevents one bad record from
+      // replacing the section with broken/empty cards.
+      const destinations = Array.isArray(rows) ? rows.slice(0, 6) : [];
+      const validImage = src => typeof src === 'string' && /^(https?:\/\/|\/[^/])/.test(src.trim());
+      if (!mosaic || destinations.length < 6 || !destinations.every(d => d && d.name && validImage(d.image_url))) return;
       const delays = ['', 'd1', 'd2', 'd1', 'd2', 'd3'];
-      mosaic.innerHTML = rows.slice(0, 6).map((d, i) => {
+      mosaic.innerHTML = destinations.map((d, i) => {
         const price = d.price_from ? '$' + Number(d.price_from).toLocaleString() : '';
         const chip = d.badge
           ? `<span class="card-chip ${d.badge === 'Top Pick' ? 'chip-gold' : 'chip-glass'}">${d.badge}</span>`
