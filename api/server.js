@@ -8,6 +8,7 @@ const TO_EMAIL         = process.env.TO_EMAIL || 'akwaabatoursa@gmail.com';
 const PORT             = process.env.PORT || 3000;
 const SUPA_URL         = process.env.SUPA_URL || 'http://supa-kong:8000';
 const SUPA_SERVICE_KEY = process.env.SUPA_SERVICE_KEY;
+const SUPA_TIMEOUT_MS  = 2_500;
 const MAX_BODY_BYTES   = 64 * 1024;
 const CHAT_LIMIT       = 20;
 const CHAT_WINDOW_MS   = 60 * 1000;
@@ -63,8 +64,22 @@ function supaInsert(table, data) {
     }
   };
   return new Promise((resolve) => {
-    const r = lib.request(opts, (res) => { res.resume(); resolve(); });
-    r.on('error', (e) => console.error('Supabase insert error:', e.message));
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      resolve();
+    };
+    const r = lib.request(opts, (res) => {
+      if (res.statusCode >= 400) console.error(`Supabase insert returned HTTP ${res.statusCode}.`);
+      res.resume();
+      finish();
+    });
+    r.setTimeout(SUPA_TIMEOUT_MS, () => r.destroy(new Error('Supabase insert timed out.')));
+    r.on('error', (e) => {
+      console.error('Supabase insert error:', e.message);
+      finish();
+    });
     r.write(body);
     r.end();
   });
@@ -130,7 +145,9 @@ const server = http.createServer(async (req, res) => {
           sessionId: data.sessionId
         });
 
-        await supaInsert('agent_conversations', {
+        // Logging is deliberately outside the response path: an analytics or
+        // database outage must never hold a customer answer behind the proxy.
+        void supaInsert('agent_conversations', {
           session_id: answer.sessionId,
           user_message: answer.safeInput,
           assistant_message: answer.text,
