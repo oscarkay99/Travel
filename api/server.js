@@ -67,9 +67,10 @@ const server = http.createServer(async (req, res) => {
 
       const { fname, lname, phone, age, email, country, passport, skills, note } = data;
 
-      if (!phone || !email) {
+      const parsedAge = Number(age);
+      if (!fname || !lname || !phone || !email || !country || !passport || !Number.isFinite(parsedAge) || parsedAge < 21 || parsedAge > 55) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: 'Email and phone are required.' }));
+        res.end(JSON.stringify({ ok: false, error: 'Complete applicant details and an age between 21 and 55 are required.' }));
         return;
       }
 
@@ -87,7 +88,7 @@ const server = http.createServer(async (req, res) => {
               <tr><td style="padding:10px 0;border-bottom:1px solid #eef2fa;color:#7a85a8;font-size:13px;">Email</td><td style="padding:10px 0;border-bottom:1px solid #eef2fa;color:#1a2340;font-weight:700;">${email || 'Not provided'}</td></tr>
               <tr><td style="padding:10px 0;border-bottom:1px solid #eef2fa;color:#7a85a8;font-size:13px;">Country</td><td style="padding:10px 0;border-bottom:1px solid #eef2fa;"><span style="background:#00b8e6;color:#fff;padding:3px 12px;border-radius:100px;font-size:13px;font-weight:700;">${country}</span></td></tr>
               <tr><td style="padding:10px 0;border-bottom:1px solid #eef2fa;color:#7a85a8;font-size:13px;">Passport</td><td style="padding:10px 0;border-bottom:1px solid #eef2fa;color:#1a2340;font-weight:700;">${passport || 'Not specified'}</td></tr>
-              <tr><td style="padding:10px 0;border-bottom:1px solid #eef2fa;color:#7a85a8;font-size:13px;">Skills</td><td style="padding:10px 0;border-bottom:1px solid #eef2fa;color:#1a2340;font-weight:700;">${skills}</td></tr>
+              <tr><td style="padding:10px 0;border-bottom:1px solid #eef2fa;color:#7a85a8;font-size:13px;">Experience</td><td style="padding:10px 0;border-bottom:1px solid #eef2fa;color:#1a2340;font-weight:700;">${skills || 'Not specified'}</td></tr>
               <tr><td style="padding:10px 0;color:#7a85a8;font-size:13px;vertical-align:top;">Notes</td><td style="padding:10px 0;color:#1a2340;">${note || 'None'}</td></tr>
             </table>
           </div>
@@ -127,10 +128,10 @@ const server = http.createServer(async (req, res) => {
 
       await supaInsert('applications', {
         first_name: fname, last_name: lname, phone,
-        age: parseInt(age) || null,
+        age: parsedAge,
         email: email || null, country,
         passport: passport || null,
-        skills, notes: note || null,
+        skills: skills || null, notes: note || null,
         status: 'new'
       });
 
