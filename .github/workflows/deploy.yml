@@ -16,12 +16,15 @@ jobs:
           GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
           GEMINI_API_KEY_4: ${{ secrets.GEMINI_API_KEY_4 }}
           GEMINI_API_KEY_5: ${{ secrets.GEMINI_API_KEY_5 }}
+          TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
+          TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
+          RATE_LIMIT_HASH_SECRET: ${{ secrets.RATE_LIMIT_HASH_SECRET }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: root
           key: ${{ secrets.VPS_SSH_KEY }}
           command_timeout: 5m
-          envs: GEMINI_API_KEY_1,GEMINI_API_KEY_2,GEMINI_API_KEY_3,GEMINI_API_KEY_4,GEMINI_API_KEY_5
+          envs: GEMINI_API_KEY_1,GEMINI_API_KEY_2,GEMINI_API_KEY_3,GEMINI_API_KEY_4,GEMINI_API_KEY_5,TURNSTILE_SITE_KEY,TURNSTILE_SECRET_KEY,RATE_LIMIT_HASH_SECRET
           script: |
             set -e
 
@@ -36,9 +39,9 @@ jobs:
             fi
 
             # Refuse deployment when the agent or browser scripts fail validation
-            docker run --rm -v "$REPO_DIR:/work:ro" -w /work node:20-alpine \
-              node --test api/ai/agent.test.js
-            docker run --rm -v "$REPO_DIR:/work:ro" -w /work node:20-alpine \
+            docker run --rm -v "$REPO_DIR:/work:ro" -w /work node:24-alpine3.23@sha256:838d276a37a1e42da2a5d01e0ecbb4401ca4147728f62ca2eba6d023a352f88f \
+              node --test api/ai/agent.test.js api/security.test.js
+            docker run --rm -v "$REPO_DIR:/work:ro" -w /work node:24-alpine3.23@sha256:838d276a37a1e42da2a5d01e0ecbb4401ca4147728f62ca2eba6d023a352f88f \
               node --check api/server.js
 
             # Deploy static files
@@ -53,7 +56,7 @@ jobs:
             mkdir -p /opt/rogernort/api/data
             cp "$REPO_DIR/data/agent-knowledge.json" /opt/rogernort/api/data/agent-knowledge.json
 
-            # Apply the idempotent agent conversation schema before starting the API
+            # Apply every idempotent schema migration before starting the API
             if docker compose -f /opt/rogernort/supabase/docker-compose.yml config --services | grep -qx db; then
               SCHEMA_OWNER=$(docker compose -f /opt/rogernort/supabase/docker-compose.yml exec -T db \
                 psql -At -U postgres -d postgres \
@@ -68,10 +71,12 @@ jobs:
                 echo "Supabase database password was not found."
                 exit 1
               fi
-              docker compose -f /opt/rogernort/supabase/docker-compose.yml exec -T \
-                -e PGPASSWORD="$DB_PASSWORD" db \
-                psql -v ON_ERROR_STOP=1 -U "$SCHEMA_OWNER" -d postgres \
-                < "$REPO_DIR/supabase/migrations/001_agent_conversations.sql"
+              for MIGRATION in "$REPO_DIR"/supabase/migrations/*.sql; do
+                docker compose -f /opt/rogernort/supabase/docker-compose.yml exec -T \
+                  -e PGPASSWORD="$DB_PASSWORD" db \
+                  psql -v ON_ERROR_STOP=1 -U "$SCHEMA_OWNER" -d postgres \
+                  < "$MIGRATION"
+              done
             else
               echo "Supabase database service 'db' was not found; refusing an incomplete agent deployment."
               exit 1
@@ -79,8 +84,8 @@ jobs:
 
             # Inject Supabase service key from VPS .env into override file (key never touches git)
             SUPA_KEY=$(grep '^SERVICE_ROLE_KEY=' /opt/rogernort/supabase/.env | cut -d= -f2-)
-            printf 'services:\n  api:\n    environment:\n      - SUPA_URL=http://supa-kong:8000\n      - SUPA_SERVICE_KEY=%s\n      - GEMINI_API_KEY_1=%s\n      - GEMINI_API_KEY_2=%s\n      - GEMINI_API_KEY_3=%s\n      - GEMINI_API_KEY_4=%s\n      - GEMINI_API_KEY_5=%s\n' \
-              "$SUPA_KEY" "$GEMINI_API_KEY_1" "$GEMINI_API_KEY_2" "$GEMINI_API_KEY_3" "$GEMINI_API_KEY_4" "$GEMINI_API_KEY_5" \
+            printf 'services:\n  api:\n    environment:\n      - NODE_ENV=production\n      - SUPA_URL=http://supa-kong:8000\n      - SUPA_SERVICE_KEY=%s\n      - RATE_LIMIT_HASH_SECRET=%s\n      - TURNSTILE_SITE_KEY=%s\n      - TURNSTILE_SECRET_KEY=%s\n      - GEMINI_API_KEY_1=%s\n      - GEMINI_API_KEY_2=%s\n      - GEMINI_API_KEY_3=%s\n      - GEMINI_API_KEY_4=%s\n      - GEMINI_API_KEY_5=%s\n' \
+              "$SUPA_KEY" "$RATE_LIMIT_HASH_SECRET" "$TURNSTILE_SITE_KEY" "$TURNSTILE_SECRET_KEY" "$GEMINI_API_KEY_1" "$GEMINI_API_KEY_2" "$GEMINI_API_KEY_3" "$GEMINI_API_KEY_4" "$GEMINI_API_KEY_5" \
               > /opt/rogernort/docker-compose.override.yml
             chmod 600 /opt/rogernort/docker-compose.override.yml
 
@@ -88,21 +93,36 @@ jobs:
             docker compose build api
             docker compose up -d --no-deps --force-recreate api
 
-            # Confirm all five projects reached the container and one grounded
-            # non-sensitive conversation completes through the production API.
+            # Install origin-level response headers and validate Nginx before reload.
+            NGINX_CONTAINER=$(docker compose ps -q nginx)
+            if [ -z "$NGINX_CONTAINER" ]; then
+              echo "Nginx container was not found; refusing deployment without security headers."
+              exit 1
+            fi
+            docker cp "$REPO_DIR/deploy/nginx-security-headers.conf" \
+              "$NGINX_CONTAINER:/etc/nginx/conf.d/zz-security-headers.conf"
+            docker compose exec -T nginx nginx -t
+            docker compose exec -T nginx nginx -s reload
+
+            # Confirm the API is healthy and one grounded non-sensitive
+            # conversation completes through the production route.
             for ATTEMPT in 1 2 3 4 5 6; do
               STATUS_JSON=$(curl -fsS https://rogernortconsult.com/api/agent/status || true)
-              if echo "$STATUS_JSON" | grep -q '"configuredProjects":5'; then
+              if echo "$STATUS_JSON" | grep -q '"ok":true'; then
                 break
               fi
               sleep 5
             done
-            echo "$STATUS_JSON" | grep -q '"configuredProjects":5'
+            echo "$STATUS_JSON" | grep -q '"ok":true'
 
             CHAT_JSON=$(curl -fsS -X POST https://rogernortconsult.com/api/agent/chat \
               -H 'Content-Type: application/json' \
+              -H 'Origin: https://rogernortconsult.com' \
               --data '{"message":"Where is your office and when are you open?"}')
             echo "$CHAT_JSON" | grep -q '"ok":true'
+
+            curl -fsSI https://rogernortconsult.com/ | grep -qi '^content-security-policy:'
+            curl -fsSI https://rogernortconsult.com/ | grep -qi '^strict-transport-security:'
 
             echo "✓ Deployed at $(date)"
 
