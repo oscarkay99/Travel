@@ -941,10 +941,11 @@
     .agent-launcher:hover { transform: translateY(-3px); box-shadow: 0 20px 50px rgba(10,21,38,.42); }
     .agent-launcher-icon {
       width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
-      color: var(--dark); background: linear-gradient(135deg, var(--gold-l), var(--gold));
-      box-shadow: 0 5px 16px rgba(201,162,75,.35);
+      overflow: hidden; background: #fff;
+      border: 2px solid rgba(201,162,75,.78);
+      box-shadow: 0 5px 18px rgba(201,162,75,.38), 0 0 0 3px rgba(255,255,255,.08);
     }
-    .agent-launcher-icon svg { width: 19px; height: 19px; }
+    .agent-brand-mark { width: 62px; height: 62px; max-width: none; object-fit: contain; transform: translateY(7px); }
     .agent-launcher-dot {
       position: absolute; top: 7px; left: 37px; width: 9px; height: 9px;
       border-radius: 50%; background: #43d17d; border: 2px solid #1c3669;
@@ -967,10 +968,10 @@
     }
     .agent-avatar {
       width: 43px; height: 43px; flex: 0 0 auto; border-radius: 14px;
-      display: grid; place-items: center; color: var(--dark);
-      background: linear-gradient(135deg, var(--gold-l), var(--gold));
+      display: grid; place-items: center; overflow: hidden; background: #fff;
+      border: 1px solid rgba(255,255,255,.62); box-shadow: 0 7px 20px rgba(0,0,0,.16);
     }
-    .agent-avatar svg { width: 22px; height: 22px; }
+    .agent-avatar .agent-brand-mark { width: 70px; height: 70px; transform: translateY(8px); }
     .agent-head-copy { min-width: 0; flex: 1; }
     .agent-head-copy strong { display: block; font-family: 'Fraunces', serif; font-size: 1.05rem; }
     .agent-status { display: flex; align-items: center; gap: 6px; margin-top: 4px; color: rgba(255,255,255,.63); font-size: .69rem; }
@@ -996,6 +997,12 @@
       color: #fff; background: var(--navy); border-color: var(--navy);
       border-radius: 17px 6px 17px 17px;
     }
+    .agent-bubble p { margin: 0 0 8px; }
+    .agent-bubble p:last-child { margin-bottom: 0; }
+    .agent-bubble strong { color: var(--navy); font-weight: 800; }
+    .agent-message.user .agent-bubble strong { color: #fff; }
+    .agent-bubble ul { margin: 7px 0 2px; padding-left: 18px; }
+    .agent-bubble li { margin: 4px 0; padding-left: 2px; }
     @keyframes agent-in { from { opacity: 0; transform: translateY(7px); } }
     .agent-typing { display: inline-flex; gap: 4px; align-items: center; min-height: 18px; }
     .agent-typing i { width: 6px; height: 6px; border-radius: 50%; background: #9ca7bc; animation: agent-dot 1s infinite ease-in-out; }
@@ -1759,16 +1766,16 @@
   <!-- ══ FLOATING WHATSAPP ══ -->
   <button class="agent-launcher" id="agentLauncher" type="button" aria-expanded="false" aria-controls="agentPanel">
     <span class="agent-launcher-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.4 4.2L18 9l-4.6 1.8L12 15l-1.4-4.2L6 9l4.6-1.8L12 3z"/><path d="M19 15l.7 2.1L22 18l-2.3.9L19 21l-.7-2.1L16 18l2.3-.9L19 15z"/></svg>
+      <img class="agent-brand-mark" src="photos/e9645b58-be3c-4974-8a03-0b34352a88e8.png" alt="" />
     </span>
-    <span>Ask our adviser</span>
+    <span>Travel Concierge</span>
     <span class="agent-launcher-dot" aria-hidden="true"></span>
   </button>
 
   <section class="agent-panel" id="agentPanel" role="dialog" aria-modal="false" aria-label="Rogernort digital travel adviser" aria-hidden="true">
     <header class="agent-head">
       <div class="agent-avatar" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.4 4.2L18 9l-4.6 1.8L12 15l-1.4-4.2L6 9l4.6-1.8L12 3z"/><path d="M19 15l.7 2.1L22 18l-2.3.9L19 21l-.7-2.1L16 18l2.3-.9L19 15z"/></svg>
+        <img class="agent-brand-mark" src="photos/e9645b58-be3c-4974-8a03-0b34352a88e8.png" alt="" />
       </div>
       <div class="agent-head-copy">
         <strong>Rogernort Concierge</strong>
@@ -2181,6 +2188,37 @@
 
       try { sessionId = sessionStorage.getItem('rogernort_agent_session') || ''; } catch (_) {}
 
+      function formatAgentText(value) {
+        const escapeHtml = text => text
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        const inline = text => escapeHtml(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        const lines = String(value || '').trim().split(/\r?\n/);
+        const output = [];
+        let listOpen = false;
+
+        const closeList = () => {
+          if (listOpen) output.push('</ul>');
+          listOpen = false;
+        };
+
+        lines.forEach(line => {
+          const bullet = line.match(/^\s*[-•]\s+(.+)/);
+          if (bullet) {
+            if (!listOpen) output.push('<ul>');
+            listOpen = true;
+            output.push(`<li>${inline(bullet[1])}</li>`);
+          } else if (line.trim()) {
+            closeList();
+            output.push(`<p>${inline(line.trim())}</p>`);
+          } else {
+            closeList();
+          }
+        });
+        closeList();
+        return output.join('');
+      }
+
       function addMessage(role, text, typing = false) {
         const row = document.createElement('div');
         row.className = `agent-message ${role}`;
@@ -2188,6 +2226,8 @@
         bubble.className = 'agent-bubble';
         if (typing) {
           bubble.innerHTML = '<span class="agent-typing" aria-label="Adviser is typing"><i></i><i></i><i></i></span>';
+        } else if (role === 'assistant') {
+          bubble.innerHTML = formatAgentText(text);
         } else {
           bubble.textContent = text;
         }
@@ -2202,7 +2242,7 @@
         panel.setAttribute('aria-hidden', 'false');
         launcher.setAttribute('aria-expanded', 'true');
         if (!greeted) {
-          addMessage('assistant', 'Akwaaba! I’m Rogernort’s digital travel adviser. Ask me about holiday packages, work-abroad requirements or booking a free consultation.');
+          addMessage('assistant', '**Akwaaba—welcome to Rogernort!**\n\nI’m your digital travel concierge. I can help with holiday packages, the Czech Republic work programme, application requirements or arranging a free consultation.\n\nWhat would you like to explore?');
           greeted = true;
         }
         setTimeout(() => input.focus(), 220);

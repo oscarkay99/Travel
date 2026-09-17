@@ -33,38 +33,38 @@ function confirmedBusinessAnswer(message) {
 
   if (/\b(refund|refundable|money back)\b/.test(text) &&
       !/\b(procedure|process|evidence|proof|how long|processing time)\b/.test(text)) {
-    return 'A refund qualifies only if the client’s offer is not received within 3–6 months. The refund procedure and processing time must be confirmed with an authorised Rogernort adviser.';
+    return '**Refund eligibility:** You qualify only if your offer is not received within 3–6 months.\n\nFor the required evidence, refund steps and processing time, one of our authorised advisers will guide you personally.';
   }
 
   if (/\b(first payment|initial payment|€\s?3,?000|eur\s?3,?000)\b/.test(text)) {
-    return 'The first payment is €3,000 and is due immediately after the applicant submits their documents. Confirm the official payment details directly with an authorised Rogernort adviser before paying.';
+    return '**First payment:** €3,000\n\nIt becomes due immediately after you submit your documents. Before making payment, please verify the official account details and payment reference directly with an authorised Rogernort adviser.';
   }
 
   if (/\b(total cost|full cost|complete cost|programme cost|program cost|€\s?6,?000|eur\s?6,?000)\b/.test(text) &&
       !/\b(include|includes|cover|breakdown)\b/.test(text)) {
-    return 'The confirmed complete Czech Republic programme cost is €6,000. A Rogernort adviser must confirm the itemised cost breakdown and official payment instructions.';
+    return '**Confirmed programme cost:** €6,000\n\nThis is the complete cost for the Czech Republic programme. An authorised adviser will provide the itemised breakdown and verified payment instructions before you pay.';
   }
 
   if (/\b(passport)\b/.test(text) && /\b(apply|application|before|without|need|required)\b/.test(text)) {
-    return 'No. A valid passport is required before applying because the passport number is needed for the application. Do not send your passport number or passport document in this chat.';
+    return '**A valid passport is required before you apply.**\n\nThe application needs a passport number, so we cannot begin without one. For your safety, please don’t send the number or a copy of your passport in this chat.';
   }
 
   if (/\b(ban|banned|blacklist|blacklisted)\b/.test(text)) {
-    return 'An applicant who is banned from Europe cannot apply for the programme. A Rogernort adviser must confirm how that status is checked.';
+    return '**Applicants who are banned from Europe cannot apply for this programme.**\n\nIf you are unsure about your status, a Rogernort adviser can explain how it is verified before you proceed.';
   }
 
   if (/\b(dubai)\b/.test(text) && /\b(price|cost|per person|airport|depart|departure|accra)\b/.test(text)) {
-    return 'The indicative Dubai package price is USD 1,200–2,000 per person, departing from Accra. Final pricing and availability must be confirmed for the requested travel dates.';
+    return '**Dubai package:** USD 1,200–2,000 per person\n\nDeparture is from Accra. Your final price and availability will depend on your preferred travel dates, so we’ll confirm those before booking.';
   }
 
   if (/\b(gcb)\b/.test(text) && /\b(belong|belongs|owned|owner|official)\b/.test(text) &&
       !/\b(account number|details|pay|payment instruction|send money)\b/.test(text)) {
-    return 'Yes. Rogernort has confirmed that the GCB account belongs directly to Rogernort. For security, obtain and verify the exact account details and payment reference with an authorised adviser before paying.';
+    return '**Yes—the official GCB account belongs directly to Rogernort.**\n\nFor your security, please obtain and verify the exact account number and payment reference with an authorised adviser before sending money.';
   }
 
   if (/\b(country|countries|opportunity|programme|program)\b/.test(text) &&
       /\b(active|available|current|currently|only)\b/.test(text)) {
-    return 'Yes. The Czech Republic is the only currently active country programme. It covers unskilled factory and warehouse roles; confirm current vacancy availability with a Rogernort adviser.';
+    return '**Yes. The Czech Republic is our only currently active country programme.**\n\nIt covers unskilled factory and warehouse roles. Would you like me to show you the requirements or help you arrange a free consultation?';
   }
 
   return null;

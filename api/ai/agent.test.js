@@ -63,7 +63,7 @@ test('answers newly confirmed commercial rules deterministically', async () => {
     ['What qualifies for a refund?', /offer is not received within 3–6 months/i],
     ['Can I apply without a valid passport?', /valid passport is required/i],
     ['What ban prevents someone from applying?', /banned from Europe/i],
-    ['Is the Dubai price per person and where does it depart?', /per person, departing from Accra/i],
+    ['Is the Dubai price per person and where does it depart?', /per person[\s\S]*Accra/i],
     ['Is the official GCB account owned by Rogernort?', /belongs directly to Rogernort/i]
   ];
 
