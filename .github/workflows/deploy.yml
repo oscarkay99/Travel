@@ -55,8 +55,16 @@ jobs:
 
             # Apply the idempotent agent conversation schema before starting the API
             if docker compose -f /opt/rogernort/supabase/docker-compose.yml config --services | grep -qx db; then
+              SCHEMA_OWNER=$(docker compose -f /opt/rogernort/supabase/docker-compose.yml exec -T db \
+                psql -At -U postgres -d postgres \
+                -c "select pg_get_userbyid(nspowner) from pg_namespace where nspname = 'rogernort'" \
+                | tr -d '[:space:]')
+              if ! echo "$SCHEMA_OWNER" | grep -Eq '^[A-Za-z_][A-Za-z0-9_]*$'; then
+                echo "Could not determine a safe owner role for the rogernort schema."
+                exit 1
+              fi
               docker compose -f /opt/rogernort/supabase/docker-compose.yml exec -T db \
-                psql -v ON_ERROR_STOP=1 -U postgres -d postgres \
+                psql -v ON_ERROR_STOP=1 -U "$SCHEMA_OWNER" -d postgres \
                 < "$REPO_DIR/supabase/migrations/001_agent_conversations.sql"
             else
               echo "Supabase database service 'db' was not found; refusing an incomplete agent deployment."
