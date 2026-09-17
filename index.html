@@ -1003,6 +1003,11 @@
     .agent-message.user .agent-bubble strong { color: #fff; }
     .agent-bubble ul { margin: 7px 0 2px; padding-left: 18px; }
     .agent-bubble li { margin: 4px 0; padding-left: 2px; }
+    .security-hp {
+      position: absolute !important; left: -10000px !important;
+      width: 1px !important; height: 1px !important; overflow: hidden !important;
+    }
+    .turnstile-slot { margin: 12px 0; min-height: 0; }
     @keyframes agent-in { from { opacity: 0; transform: translateY(7px); } }
     .agent-typing { display: inline-flex; gap: 4px; align-items: center; min-height: 18px; }
     .agent-typing i { width: 6px; height: 6px; border-radius: 50%; background: #9ca7bc; animation: agent-dot 1s infinite ease-in-out; }
@@ -1529,6 +1534,10 @@
           <h4>Apply Now: It's Free</h4>
           <p>No hidden fees at this stage. Just your information so we can reach you.</p>
           <form class="af" id="applyForm" novalidate>
+            <div class="security-hp" aria-hidden="true">
+              <label for="ap-website">Leave this field empty</label>
+              <input type="text" id="ap-website" name="website" tabindex="-1" autocomplete="off" />
+            </div>
             <div class="af-row">
               <div class="af-field">
                 <label for="ap-fname">First Name *</label>
@@ -1578,11 +1587,12 @@
               <label for="ap-note">Anything else we should know?</label>
               <textarea id="ap-note" placeholder="Previous work experience, questions, etc."></textarea>
             </div>
+            <div class="turnstile-slot" data-turnstile-for="application"></div>
             <button type="submit" class="af-submit" id="applyBtn">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
               Submit My Application
             </button>
-            <p class="af-note">Your details are sent securely to our team. We'll contact you within 24 hours. By submitting, you agree to our <a href="/privacy-policy.html" target="_blank" style="color:var(--gold-text);">Privacy Policy</a> and <a href="/terms.html" target="_blank" style="color:var(--gold-text);">Terms of Use</a>.</p>
+            <p class="af-note">Your details are sent securely to our team. We'll contact you within 24 hours. By submitting, you agree to our <a href="/privacy-policy.html" target="_blank" rel="noopener noreferrer" style="color:var(--gold-text);">Privacy Policy</a> and <a href="/terms.html" target="_blank" rel="noopener noreferrer" style="color:var(--gold-text);">Terms of Use</a>.</p>
           </form>
         </div>
       </div>
@@ -1601,7 +1611,11 @@
         <p class="body-text light" style="max-width:360px;">Tell us where you want to go. We'll take it from there, designing an experience you'll be telling stories about for years.</p>
       </div>
       <div class="cta-right">
-        <form class="cta-form" onsubmit="handlePlan(event)" novalidate>
+        <form class="cta-form" id="planForm" novalidate>
+          <div class="security-hp" aria-hidden="true">
+            <label for="plan-website">Leave this field empty</label>
+            <input type="text" id="plan-website" name="website" tabindex="-1" autocomplete="off" />
+          </div>
           <label for="plan-name" class="sr">Your name</label>
           <input type="text" id="plan-name" placeholder="Your full name" />
           <label for="plan-email" class="sr">Your email</label>
@@ -1610,9 +1624,10 @@
           <input type="tel" id="plan-phone" placeholder="Phone / WhatsApp number" required />
           <label for="plan-dest" class="sr">Dream destination</label>
           <input type="text" id="plan-dest" placeholder="Dream destination" />
+          <div class="turnstile-slot" data-turnstile-for="enquiry"></div>
           <button type="submit" id="plan-btn">Send My Request</button>
         </form>
-        <p class="cta-note">We'll get back to you within 24 hours. No commitment needed. By submitting, you agree to our <a href="/privacy-policy.html" target="_blank" style="color:rgba(255,255,255,.4);">Privacy Policy</a>.</p>
+        <p class="cta-note">We'll get back to you within 24 hours. No commitment needed. By submitting, you agree to our <a href="/privacy-policy.html" target="_blank" rel="noopener noreferrer" style="color:rgba(255,255,255,.4);">Privacy Policy</a>.</p>
       </div>
     </div>
   </div>
@@ -1818,6 +1833,19 @@
   </div>
 
   <script>
+    const formSecurity = {
+      applicationStartedAt: Date.now(),
+      enquiryStartedAt: Date.now(),
+      widgets: Object.create(null)
+    };
+
+    function turnstileToken(kind) {
+      const widgetId = formSecurity.widgets[kind];
+      return widgetId !== undefined && window.turnstile
+        ? window.turnstile.getResponse(widgetId)
+        : '';
+    }
+
     // ── Nav scroll state ──
     const nav = document.getElementById('nav');
     const heroSection = document.querySelector('.hero');
@@ -1897,7 +1925,7 @@
       }, { threshold: 0.35 }).observe(statBand);
     }
 
-    // ── Work Abroad application → Email + WhatsApp ──
+    // ── Work Abroad application ──
     document.getElementById('applyForm')?.addEventListener('submit', async function(e) {
       e.preventDefault();
       const fname    = document.getElementById('ap-fname').value.trim();
@@ -1909,6 +1937,7 @@
       const passport = document.getElementById('ap-passport').value;
       const skills   = document.getElementById('ap-skills').value.trim();
       const note     = document.getElementById('ap-note').value.trim();
+      const website  = document.getElementById('ap-website').value;
 
       if (!fname || !lname || !phone || !age || !email || !country || !passport) {
         alert('Please fill in all required fields marked with *');
@@ -1924,49 +1953,49 @@
       btn.textContent = 'Sending…';
       btn.disabled = true;
 
-      // 1️⃣ Send email via secure server-side API (key never exposed to browser)
       try {
-        await fetch('/api/apply', {
+        const response = await fetch('/api/apply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fname, lname, phone, age, email, country, passport, skills, note })
+          body: JSON.stringify({
+            fname, lname, phone, age, email, country, passport, skills, note,
+            website,
+            formStartedAt: formSecurity.applicationStartedAt,
+            turnstileToken: turnstileToken('application')
+          })
         });
-      } catch (_) { /* silent, WhatsApp still delivers the data */ }
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) throw new Error(result.error || 'Unable to send the application.');
+      } catch (error) {
+        alert(error.message || 'We could not send your application. Please try again.');
+        btn.textContent = 'Submit My Application';
+        btn.disabled = false;
+        return;
+      }
 
-      // 2️⃣ Open WhatsApp with full details
-      const msg = encodeURIComponent(
-        `🌍 *NEW WORK ABROAD APPLICATION*\n\n` +
-        `👤 *Name:* ${fname} ${lname}\n` +
-        `📞 *WhatsApp:* ${phone}\n` +
-        `🎂 *Age:* ${age}\n` +
-        `📧 *Email:* ${email || 'Not provided'}\n` +
-        `🌐 *Country:* ${country}\n` +
-        `🛂 *Passport:* ${passport || 'Not specified'}\n` +
-        `💼 *Experience:* ${skills || 'Not specified'}\n` +
-        `📝 *Notes:* ${note || 'None'}\n\n` +
-        `_Sent from rogernort.com_`
-      );
-      window.open(`https://wa.me/233559499248?text=${msg}`, '_blank');
-
-      // 3️⃣ Success state
-      btn.innerHTML = '✓ Application Sent!';
+      btn.textContent = 'Application Sent ✓';
       btn.style.background = '#22c55e';
       e.target.reset();
+      formSecurity.applicationStartedAt = Date.now();
+      if (window.turnstile && formSecurity.widgets.application !== undefined) {
+        window.turnstile.reset(formSecurity.widgets.application);
+      }
       setTimeout(() => {
-        btn.innerHTML = `<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg> Send Application via WhatsApp`;
+        btn.textContent = 'Submit My Application';
         btn.style.background = '';
         btn.disabled = false;
       }, 4000);
     });
 
     // ── Plan form ──
-    async function handlePlan(e) {
+    document.getElementById('planForm')?.addEventListener('submit', async function handlePlan(e) {
       e.preventDefault();
       const btn = document.getElementById('plan-btn');
       const name        = document.getElementById('plan-name').value.trim();
       const email       = document.getElementById('plan-email').value.trim();
       const phone       = document.getElementById('plan-phone').value.trim();
       const destination = document.getElementById('plan-dest').value.trim();
+      const website     = document.getElementById('plan-website').value;
       if (!email || !phone) {
         alert('Please provide both your email address and phone number.');
         return;
@@ -1975,49 +2004,85 @@
       btn.disabled = true;
 
       try {
-        await fetch('/api/enquire', {
+        const response = await fetch('/api/enquire', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, phone, destination })
+          body: JSON.stringify({
+            name, email, phone, destination, website,
+            formStartedAt: formSecurity.enquiryStartedAt,
+            turnstileToken: turnstileToken('enquiry')
+          })
         });
-      } catch (_) {}
-
-      // Open WhatsApp with enquiry details
-      const msg = encodeURIComponent(
-        `✈️ *NEW TRIP ENQUIRY*\n\n` +
-        `👤 *Name:* ${name || 'Not provided'}\n` +
-        `📧 *Email:* ${email}\n` +
-        `📞 *Phone:* ${phone || 'Not provided'}\n` +
-        `🌍 *Destination:* ${destination || 'Not specified'}\n\n` +
-        `_Sent from rogernortconsult.com_`
-      );
-      window.open(`https://wa.me/233559499248?text=${msg}`, '_blank');
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) throw new Error(result.error || 'Unable to send the request.');
+      } catch (error) {
+        alert(error.message || 'We could not send your request. Please try again.');
+        btn.textContent = 'Send My Request';
+        btn.disabled = false;
+        return;
+      }
 
       btn.textContent = 'Request Sent ✓';
       btn.style.background = '#22c55e';
       e.target.querySelectorAll('input').forEach(i => i.value = '');
+      formSecurity.enquiryStartedAt = Date.now();
+      if (window.turnstile && formSecurity.widgets.enquiry !== undefined) {
+        window.turnstile.reset(formSecurity.widgets.enquiry);
+      }
       setTimeout(() => { btn.textContent = 'Send My Request'; btn.style.background = ''; btn.disabled = false; }, 4000);
-    }
+    });
 
     // ── Reduced motion ──
     if (matchMedia('(prefers-reduced-motion: reduce)').matches)
       document.querySelectorAll('.r').forEach(el => el.classList.add('in'));
 
-    // ── Supabase dynamic content ──
-    const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTY0MTc2OTIwMCwiZXhwIjoxOTU3MzQ1MjAwLCJyb2xlIjoiYW5vbiJ9.nVuc7WClKQcjkbLUrP2ROG91n6AGz52Stn3i0SRXzJs';
-    const SUPA_BASE = 'https://supabase.rogernortconsult.com';
+    // ── Public content through the same-origin allowlisted API ──
+    const escapeMarkup = value => String(value ?? '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 
-    async function supaFetch(table, params) {
+    function safeImageUrl(value) {
+      const raw = typeof value === 'string' ? value.trim() : '';
+      if (/^\/[a-zA-Z0-9/_-]+\.(?:png|jpe?g|webp|avif)$/i.test(raw)) return raw;
       try {
-        const r = await fetch(`${SUPA_BASE}/rest/v1/${table}${params || ''}`, {
-          headers: {
-            'apikey': SUPA_ANON,
-            'Authorization': `Bearer ${SUPA_ANON}`,
-            'Accept-Profile': 'rogernort'
-          }
+        const url = new URL(raw);
+        const allowedHosts = new Set(['images.unsplash.com', 'supabase.rogernortconsult.com', location.hostname]);
+        return url.protocol === 'https:' && !url.username && !url.password && !url.port && allowedHosts.has(url.hostname)
+          ? url.href
+          : '';
+      } catch (_) { return ''; }
+    }
+
+    async function publicContent() {
+      try {
+        const response = await fetch('/api/content', { headers: { Accept: 'application/json' } });
+        const data = await response.json();
+        return response.ok && data.ok ? data : {};
+      } catch (_) { return {}; }
+    }
+
+    async function setupTurnstile() {
+      let config;
+      try {
+        const response = await fetch('/api/public-config', { headers: { Accept: 'application/json' } });
+        config = await response.json();
+      } catch (_) { return; }
+      if (!config?.turnstile?.enabled || !config.turnstile.siteKey) return;
+
+      const script = document.createElement('script');
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      script.async = true;
+      script.defer = true;
+      script.addEventListener('load', () => {
+        document.querySelectorAll('[data-turnstile-for]').forEach((slot) => {
+          const kind = slot.dataset.turnstileFor;
+          formSecurity.widgets[kind] = window.turnstile.render(slot, {
+            sitekey: config.turnstile.siteKey,
+            theme: 'light'
+          });
         });
-        return r.ok ? r.json() : null;
-      } catch { return null; }
+      }, { once: true });
+      document.head.appendChild(script);
     }
 
     const GOOGLE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>';
@@ -2028,22 +2093,26 @@
       // or contains a malformed image path. This prevents one bad record from
       // replacing the section with broken/empty cards.
       const destinations = Array.isArray(rows) ? rows.slice(0, 6) : [];
-      const validImage = src => typeof src === 'string' && /^(https?:\/\/|\/[^/])/.test(src.trim());
-      if (!mosaic || destinations.length < 6 || !destinations.every(d => d && d.name && validImage(d.image_url))) return;
+      if (!mosaic || destinations.length < 6 || !destinations.every(d => d && d.name && safeImageUrl(d.image_url))) return;
       const delays = ['', 'd1', 'd2', 'd1', 'd2', 'd3'];
       mosaic.innerHTML = destinations.map((d, i) => {
-        const price = d.price_from ? '$' + Number(d.price_from).toLocaleString() : '';
+        const priceNumber = Number(d.price_from);
+        const price = Number.isFinite(priceNumber) && priceNumber >= 0 ? '$' + priceNumber.toLocaleString() : '';
+        const name = escapeMarkup(d.name);
+        const region = escapeMarkup(d.region);
+        const image = escapeMarkup(safeImageUrl(d.image_url));
+        const badge = escapeMarkup(d.badge);
         const chip = d.badge
-          ? `<span class="card-chip ${d.badge === 'Top Pick' ? 'chip-gold' : 'chip-glass'}">${d.badge}</span>`
+          ? `<span class="card-chip ${d.badge === 'Top Pick' ? 'chip-gold' : 'chip-glass'}">${badge}</span>`
           : '';
         const cls = 'card r' + (delays[i] ? ' ' + delays[i] : '');
-        return `<a href="#plan" class="${cls}" aria-label="${d.name}">
-          <img src="${d.image_url}" alt="${d.name}" loading="lazy" />
+        return `<a href="#plan" class="${cls}" aria-label="${name}">
+          <img src="${image}" alt="${name}" loading="lazy" />
           <div class="card-shade"></div>
           ${chip}
           <div class="card-body">
-            <div class="card-region">${d.region}</div>
-            <h3>${d.name}</h3>
+            <div class="card-region">${region}</div>
+            <h3>${name}</h3>
             <div class="card-foot">
               <div class="card-price">From <strong>${price}</strong></div>
               <div class="card-stars">★★★★★</div>
@@ -2059,20 +2128,21 @@
       if (!grid || !rows || !rows.length) return;
       const delays = ['d1', 'd2', 'd3', 'd1', 'd2', 'd3'];
       grid.innerHTML = rows.slice(0, 6).map((t, i) => {
-        const stars = '★'.repeat(Math.max(1, Math.min(5, t.rating || 5)));
+        const rating = Math.max(1, Math.min(5, Number(t.rating) || 5));
+        const stars = '★'.repeat(rating);
         const ava = '';
         return `<div class="tc r ${delays[i]}">
           <div class="tc-head">
             <div class="tc-user">
               ${ava}
               <div>
-                <div class="tc-name">${t.name}</div>
-                <div class="tc-dest">${t.destination}</div>
+                <div class="tc-name">${escapeMarkup(t.name)}</div>
+                <div class="tc-dest">${escapeMarkup(t.destination)}</div>
               </div>
             </div>
-            <div class="tc-stars" aria-label="${t.rating || 5} stars">${stars}</div>
+            <div class="tc-stars" aria-label="${rating} stars">${stars}</div>
           </div>
-          <p class="tc-text">${t.content}</p>
+          <p class="tc-text">${escapeMarkup(t.content)}</p>
           <div class="tc-foot">${GOOGLE_ICON} Reviewed on Google</div>
         </div>`;
       }).join('');
@@ -2086,9 +2156,9 @@
       grid.innerHTML = rows.slice(0, 6).map((c, i) => {
         const roles = Array.isArray(c.roles) ? c.roles : [];
         return `<div class="country-card r ${delays[i]}">
-          <div class="country-flag">${c.flag}</div>
-          <div class="country-name">${c.name}</div>
-          <div class="country-roles">${roles.map(r => `<span class="role-tag">${r}</span>`).join('')}</div>
+          <div class="country-flag">${escapeMarkup(c.flag)}</div>
+          <div class="country-name">${escapeMarkup(c.name)}</div>
+          <div class="country-roles">${roles.map(r => `<span class="role-tag">${escapeMarkup(r)}</span>`).join('')}</div>
           <div class="country-spots"><span></span> Currently active country programme</div>
         </div>`;
       }).join('');
@@ -2162,12 +2232,9 @@
     document.getElementById('cookieSettingsBtn')?.addEventListener('click', showCookieBanner);
 
     window.addEventListener('load', async () => {
-      const [dests, testis] = await Promise.all([
-        supaFetch('destinations', '?active=eq.true&order=sort_order.asc'),
-        supaFetch('testimonials', '?active=eq.true&order=sort_order.asc')
-      ]);
-      renderDestinations(dests);
-      renderTestimonials(testis);
+      const [content] = await Promise.all([publicContent(), setupTurnstile()]);
+      renderDestinations(content.destinations);
+      renderTestimonials(content.testimonials);
     });
 
     // ── Rogernort digital travel adviser ──

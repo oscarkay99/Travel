@@ -301,8 +301,7 @@
       <ol>
         <li>Your data is sent over <strong>HTTPS (TLS encryption)</strong> to our secure API hosted on a private VPS server.</li>
         <li>The API forwards your information by email to our team inbox using the Resend transactional email service.</li>
-        <li>A copy of the key details is also delivered via WhatsApp to our business number (+233 55 949 9248) so we can respond promptly.</li>
-        <li>Application data may be stored in a password-protected PostgreSQL database on the same VPS. Only authorised Rogernort staff have database access.</li>
+        <li>Application data is stored in a protected PostgreSQL database on the same VPS. Public website visitors cannot read submitted applications.</li>
       </ol>
       <p>When you use the digital adviser, the message is sent over HTTPS to our backend, automatically checked for common sensitive-data patterns, and then processed using Google's Gemini API. Only Rogernort information approved for public use is included as reference material. On Gemini's free tier, Google states that submitted content may be used to improve its products; for that reason, you must not use the adviser to send identity documents, financial details or other confidential information.</p>
       <p>Our server is hosted on Hostinger VPS infrastructure with Ubuntu 24.04 LTS. All connections to the site and API use HTTPS certificates from Let's Encrypt.</p>
@@ -316,11 +315,11 @@
       <ul>
         <li><strong>Rogernort staff</strong> — the owner and any staff members directly involved in processing your application or travel enquiry.</li>
         <li><strong>Resend</strong> — our transactional email provider, which processes and delivers emails on our behalf. Resend is subject to its own privacy policy and processes data as a data processor.</li>
-        <li><strong>WhatsApp / Meta</strong> — when your summary is delivered to our WhatsApp, it passes through Meta's platform. Meta's privacy policy governs their handling of message content.</li>
         <li><strong>Hosting infrastructure</strong> — Hostinger provides the server on which data may be temporarily or persistently stored.</li>
+        <li><strong>Cloudflare</strong> — provides our CDN, network security and, when enabled, Turnstile bot verification. Turnstile processes limited browser and interaction signals needed to distinguish legitimate visitors from automated abuse.</li>
         <li><strong>Google Gemini API</strong> — processes redacted digital-adviser messages and generates responses, subject to Google's applicable terms and privacy notices.</li>
       </ul>
-      <p>No other third parties receive your personal data.</p>
+      <p>If you independently choose a WhatsApp link on this site, the information you send there is governed by WhatsApp/Meta's privacy terms. The providers listed here receive only the information needed to deliver their respective services.</p>
     </div>
 
     <hr class="divider" />
@@ -350,12 +349,10 @@
       </p>
       <p>We use limited browser storage for essential site functions:</p>
       <ul>
-        <li>Remembering your cookie consent preference so we do not show the banner on every visit.</li>
-        <li>Minor UI state (e.g., preloader dismissed).</li>
         <li>Keeping a random digital-adviser session identifier for the current browser tab.</li>
       </ul>
       <p>The browser session identifier does not contain your name or message content. You can clear this data at any time from your browser settings under "Site Data" or "Storage".</p>
-      <p>External resources loaded by the site include Google Fonts (for typography) and Mixkit (for the hero video). These third-party domains may set their own cookies subject to their respective privacy policies. Loading fonts requires your browser to make a request to Google's servers, which may log your IP address per Google's standard logging practices.</p>
+      <p>External resources loaded by the site include Google Fonts (typography), Unsplash (destination imagery), Mixkit (hero video) and, when enabled, Cloudflare Turnstile (bot protection). Your browser connects directly to those providers, which may process your IP address and basic request information under their respective privacy terms.</p>
     </div>
 
     <hr class="divider" />
