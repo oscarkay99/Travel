@@ -1,9 +1,9 @@
 'use strict';
 
-const DEFAULT_TIMEOUT_MS = 25_000;
+const DEFAULT_TIMEOUT_MS = 7_000;
 const GEMINI_BASE_URL = process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta';
 const DEFAULT_MODELS =
-  'gemini-3.8-flash,gemini-3.7-flash,gemini-3.6-flash,gemini-3.5-flash,gemini-3.5-flash-lite,gemini-3.1-flash-lite';
+  'gemini-3.6-flash,gemini-3.8-flash,gemini-3.7-flash,gemini-3.5-flash,gemini-3.5-flash-lite,gemini-3.1-flash-lite';
 
 function csv(value, fallback) {
   return (value || fallback)
@@ -20,7 +20,7 @@ function positiveNumber(value, fallback) {
 const shared = {
   type: 'gemini',
   baseUrl: GEMINI_BASE_URL,
-  timeoutMs: positiveNumber(process.env.AI_REQUEST_TIMEOUT_MS, DEFAULT_TIMEOUT_MS),
+  timeoutMs: positiveNumber(process.env.AI_MODEL_TIMEOUT_MS, DEFAULT_TIMEOUT_MS),
   cooldownMs: positiveNumber(process.env.AI_PROVIDER_COOLDOWN_MS, 60_000)
 };
 

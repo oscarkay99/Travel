@@ -68,7 +68,7 @@ async function requestJson(url, options, timeoutMs) {
   }
 }
 
-function toGeminiRequest(messages, options) {
+function toGeminiRequest(messages, options, model) {
   const system = messages
     .filter((message) => message.role === 'system')
     .map((message) => message.content)
@@ -85,7 +85,8 @@ function toGeminiRequest(messages, options) {
     contents,
     generationConfig: {
       temperature: options.temperature ?? 0.2,
-      maxOutputTokens: options.maxTokens ?? 1_024
+      maxOutputTokens: options.maxTokens ?? 1_024,
+      ...(model.startsWith('gemini-3') ? { thinkingConfig: { thinkingLevel: 'low' } } : {})
     }
   };
 }
@@ -99,8 +100,8 @@ async function callGemini(provider, model, messages, options) {
       'Content-Type': 'application/json',
       'x-goog-api-key': provider.apiKey
     },
-    body: JSON.stringify(toGeminiRequest(messages, options))
-  }, provider.timeoutMs);
+    body: JSON.stringify(toGeminiRequest(messages, options, model))
+  }, options.requestTimeoutMs || provider.timeoutMs);
 
   const text = payload.candidates?.[0]?.content?.parts
     ?.map((part) => part.text || '')
@@ -145,8 +146,10 @@ async function callProvider(provider, model, messages, options) {
 async function generate(messages, options = {}) {
   const safeMessages = normaliseMessages(messages);
   const attempts = [];
+  const totalTimeoutMs = options.totalTimeoutMs || 22_000;
+  const deadline = Date.now() + totalTimeoutMs;
 
-  for (const providerName of providerOrder) {
+  providerLoop: for (const providerName of providerOrder) {
     const provider = providers[providerName];
 
     if (!provider.apiKey) {
@@ -159,8 +162,13 @@ async function generate(messages, options = {}) {
     }
 
     for (const model of provider.models) {
+      const remainingMs = deadline - Date.now();
+      if (remainingMs < 250) break providerLoop;
       try {
-        const result = await callProvider(provider, model, safeMessages, options);
+        const result = await callProvider(provider, model, safeMessages, {
+          ...options,
+          requestTimeoutMs: Math.min(provider.timeoutMs, remainingMs)
+        });
         recordSuccess(providerName);
         return { ...result, provider: providerName, model, attempts };
       } catch (error) {

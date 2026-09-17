@@ -76,7 +76,7 @@ async function answerUser({ message, history, sessionId }) {
       { role: 'system', content: SYSTEM_PROMPT },
       ...safeHistory.messages,
       { role: 'user', content: safeInput.text }
-    ], { temperature: 0.15, maxTokens: 700 });
+    ], { temperature: 0.15, maxTokens: 420, totalTimeoutMs: 22_000 });
 
     return {
       sessionId: id,
