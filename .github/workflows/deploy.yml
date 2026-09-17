@@ -63,7 +63,13 @@ jobs:
                 echo "Could not determine a safe owner role for the rogernort schema."
                 exit 1
               fi
-              docker compose -f /opt/rogernort/supabase/docker-compose.yml exec -T db \
+              DB_PASSWORD=$(grep '^POSTGRES_PASSWORD=' /opt/rogernort/supabase/.env | cut -d= -f2-)
+              if [ -z "$DB_PASSWORD" ]; then
+                echo "Supabase database password was not found."
+                exit 1
+              fi
+              docker compose -f /opt/rogernort/supabase/docker-compose.yml exec -T \
+                -e PGPASSWORD="$DB_PASSWORD" db \
                 psql -v ON_ERROR_STOP=1 -U "$SCHEMA_OWNER" -d postgres \
                 < "$REPO_DIR/supabase/migrations/001_agent_conversations.sql"
             else
