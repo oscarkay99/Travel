@@ -186,8 +186,9 @@ const server = http.createServer(async (req, res) => {
       const { fname, lname, phone, age, email, country, passport, skills, note } = data;
 
       const parsedAge = Number(age);
-      if (!fname || !lname || !phone || !email || !country || !passport || !Number.isFinite(parsedAge) || parsedAge < 21 || parsedAge > 55) {
-        sendJson(res, 400, { ok: false, error: 'Complete applicant details and an age between 21 and 55 are required.' });
+      const hasValidPassport = ['Yes, I have a valid passport', 'Yes, valid passport'].includes(passport);
+      if (!fname || !lname || !phone || !email || !country || !hasValidPassport || !Number.isFinite(parsedAge) || parsedAge < 21 || parsedAge > 55) {
+        sendJson(res, 400, { ok: false, error: 'Complete applicant details, an age between 21 and 55, and a valid passport are required.' });
         return;
       }
 

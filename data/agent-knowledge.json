@@ -1,8 +1,8 @@
 {
   "source": {
-    "name": "Roger and team questionnaire response",
+    "name": "Roger and team questionnaire responses",
     "reviewed_on": "2026-09-17",
-    "status": "partial"
+    "status": "confirmed with follow-up answers"
   },
   "business": {
     "primary_service": "Europe recruitment",
@@ -28,12 +28,16 @@
       },
       "includes": ["visa", "flight", "hotel", "breakfast", "tour"],
       "required_documents": ["passport", "passport photograph"],
-      "publication_status": "needs price-basis and availability confirmation"
+      "price_basis": "per person",
+      "departure_airport": "Accra",
+      "publication_status": "price basis and departure airport confirmed"
     }
   ],
   "work_programmes": [
     {
       "country": "Czech Republic",
+      "currently_active": true,
+      "only_currently_active_country": true,
       "roles": ["factory worker", "warehouse worker"],
       "skill_level": "unskilled",
       "processing_time_months": {
@@ -46,9 +50,22 @@
         "maximum": 55
       },
       "passport_required_to_proceed": true,
-      "skills_required": false
+      "passport_number_required": true,
+      "may_apply_without_valid_passport": false,
+      "skills_required": false,
+      "complete_programme_cost_eur": 6000,
+      "first_payment_eur": 3000,
+      "first_payment_due": "immediately after the applicant submits their documents",
+      "refund_eligibility": "only if the client's offer is not received within 3 to 6 months",
+      "disqualification": "an applicant banned from Europe cannot apply"
     }
   ],
+  "payments": {
+    "bank": "GCB",
+    "account_belongs_directly_to_rogernort": true,
+    "account_number_published": false,
+    "instruction": "Confirm the exact account details and payment reference directly with an authorised Rogernort adviser before paying."
+  },
   "work_abroad_process": [
     "Submit application",
     "Attend free consultation and application review",
@@ -59,24 +76,22 @@
     "may": [
       "state confirmed office hours",
       "explain confirmed programme requirements",
+      "state confirmed programme cost, first-payment timing and refund eligibility",
+      "confirm that the official GCB account belongs directly to Rogernort without disclosing unprovided account details",
       "book or request a free consultation"
     ],
     "must_not": [
       "claim or imply 100 percent visa assurance",
-      "confirm unresolved payment or refund terms",
+      "invent payment account numbers or unconfirmed payment instructions",
       "present unverified jobs as available"
     ],
     "fallback": "This detail requires confirmation from a Rogernort adviser. Would you like to book a free consultation?"
   },
   "unresolved": [
-    "Whether Czech Republic is the only currently active work programme",
-    "Whether EUR 6000 is the full programme cost and what it includes",
-    "When the EUR 3000 first payment is due",
-    "Detailed refund eligibility and exclusions",
-    "Official GCB account ownership and payment instructions",
-    "Whether an applicant may enquire before obtaining a valid passport",
-    "The incomplete applicant-ban or disqualification condition",
-    "Whether the Dubai price is per person and the applicable departure airport",
+    "What the EUR 6000 complete programme cost includes",
+    "The exact GCB account number and payment reference instructions",
+    "Refund request procedure, evidence requirements and processing time",
+    "How a Europe ban is verified",
     "The exact Ghana-issued document required for the Dubai package",
     "When the agent must transfer a conversation to Roger or another staff member"
   ]

@@ -3,7 +3,7 @@
 const crypto = require('crypto');
 const { generate, AIProvidersExhaustedError } = require('./router');
 const { groundingContext } = require('./knowledge');
-const { redactSensitiveData, requiresHumanConfirmation, safeFallback } = require('./guardrails');
+const { confirmedBusinessAnswer, redactSensitiveData, requiresHumanConfirmation, safeFallback } = require('./guardrails');
 
 const MAX_HISTORY_MESSAGES = 16;
 const MAX_MESSAGE_LENGTH = 4_000;
@@ -58,6 +58,19 @@ async function answerUser({ message, history, sessionId }) {
     ? sessionId
     : crypto.randomUUID();
   const redactions = [...new Set([...safeInput.redactions, ...safeHistory.redactions])];
+  const confirmedAnswer = confirmedBusinessAnswer(safeInput.text);
+
+  if (confirmedAnswer) {
+    return {
+      sessionId: id,
+      text: confirmedAnswer,
+      handoffRecommended: false,
+      redactions,
+      safeInput: safeInput.text,
+      provider: 'confirmed_business_rule',
+      model: null
+    };
+  }
 
   if (requiresHumanConfirmation(safeInput.text)) {
     return {

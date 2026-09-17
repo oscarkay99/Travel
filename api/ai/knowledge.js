@@ -34,6 +34,7 @@ function groundingContext() {
     holiday_packages: knowledge.holiday_packages,
     work_programmes: knowledge.work_programmes,
     work_abroad_process: knowledge.work_abroad_process,
+    payments: knowledge.payments,
     agent_rules: knowledge.agent_rules
   };
   return JSON.stringify(publicKnowledge, null, 2);
