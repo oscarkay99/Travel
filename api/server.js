@@ -1,11 +1,46 @@
 const http = require('http');
 const https = require('https');
+const { answerUser } = require('./ai/agent');
+const { getProviderStatus } = require('./ai/router');
 
 const RESEND_KEY       = process.env.RESEND_API_KEY;
 const TO_EMAIL         = process.env.TO_EMAIL || 'akwaabatoursa@gmail.com';
 const PORT             = process.env.PORT || 3000;
 const SUPA_URL         = process.env.SUPA_URL || 'http://supa-kong:8000';
 const SUPA_SERVICE_KEY = process.env.SUPA_SERVICE_KEY;
+const MAX_BODY_BYTES   = 64 * 1024;
+const CHAT_LIMIT       = 20;
+const CHAT_WINDOW_MS   = 60 * 1000;
+const chatRateLimits   = new Map();
+
+function sendJson(res, status, payload) {
+  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
+  res.end(JSON.stringify(payload));
+}
+
+function clientIp(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  return (typeof forwarded === 'string' ? forwarded.split(',')[0] : req.socket.remoteAddress || 'unknown').trim();
+}
+
+function chatRateLimited(req) {
+  const now = Date.now();
+  const key = clientIp(req);
+  const current = chatRateLimits.get(key);
+  if (!current || current.resetAt <= now) {
+    chatRateLimits.set(key, { count: 1, resetAt: now + CHAT_WINDOW_MS });
+    return false;
+  }
+  current.count += 1;
+  return current.count > CHAT_LIMIT;
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of chatRateLimits) {
+    if (value.resetAt <= now) chatRateLimits.delete(key);
+  }
+}, CHAT_WINDOW_MS).unref();
 
 function supaInsert(table, data) {
   if (!SUPA_SERVICE_KEY) return Promise.resolve();
@@ -36,41 +71,106 @@ function supaInsert(table, data) {
 }
 
 const server = http.createServer(async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', 'https://rogernortconsult.com');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  const origin = req.headers.origin;
+  const allowedOrigins = new Set([
+    'https://rogernortconsult.com',
+    'https://www.rogernortconsult.com',
+    'http://localhost:3000',
+    'http://localhost:5173'
+  ]);
+  if (allowedOrigins.has(origin)) res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
 
   if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
-  if (req.method !== 'POST') { res.writeHead(404); res.end('Not found'); return; }
+
+  if (req.method === 'GET' && req.url === '/api/agent/status') {
+    const statuses = getProviderStatus();
+    sendJson(res, 200, {
+      ok: true,
+      configuredProjects: statuses.filter((item) => item.configured).length,
+      availableProjects: statuses.filter((item) => item.available).length
+    });
+    return;
+  }
+
+  if (req.method !== 'POST') { sendJson(res, 404, { ok: false, error: 'Not found' }); return; }
+
+  if (req.url === '/api/agent/chat' && chatRateLimited(req)) {
+    res.setHeader('Retry-After', '60');
+    sendJson(res, 429, { ok: false, error: 'Too many messages. Please try again shortly.' });
+    return;
+  }
 
   let body = '';
-  req.on('data', chunk => body += chunk);
+  let bodyTooLarge = false;
+  req.on('data', chunk => {
+    if (bodyTooLarge) return;
+    body += chunk;
+    if (Buffer.byteLength(body) > MAX_BODY_BYTES) {
+      bodyTooLarge = true;
+      body = '';
+    }
+  });
   req.on('end', async () => {
     try {
+      if (bodyTooLarge) {
+        sendJson(res, 413, { ok: false, error: 'Request body is too large.' });
+        return;
+      }
       const data = JSON.parse(body);
+
+      // ── Grounded AI travel adviser ──
+      if (req.url === '/api/agent/chat') {
+        const answer = await answerUser({
+          message: data.message,
+          history: data.history,
+          sessionId: data.sessionId
+        });
+
+        await supaInsert('agent_conversations', {
+          session_id: answer.sessionId,
+          user_message: answer.safeInput,
+          assistant_message: answer.text,
+          provider: answer.provider,
+          model: answer.model,
+          handoff_recommended: answer.handoffRecommended,
+          redactions: answer.redactions
+        });
+
+        sendJson(res, 200, {
+          ok: true,
+          sessionId: answer.sessionId,
+          message: answer.text,
+          handoffRecommended: answer.handoffRecommended,
+          privacyNotice: answer.redactions.length
+            ? 'Sensitive information was removed before processing.'
+            : undefined
+        });
+        return;
+      }
 
       // ── Trip Enquiry (CTA form) ──
       if (req.url === '/api/enquire') {
         const { name, email, phone, destination } = data;
         if (!email || !phone) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ ok: false, error: 'Email and phone are required.' }));
+          sendJson(res, 400, { ok: false, error: 'Email and phone are required.' });
           return;
         }
         await supaInsert('enquiries', { name: name || null, email, phone, destination: destination || null });
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: true }));
+        sendJson(res, 200, { ok: true });
         return;
       }
 
-      if (req.url !== '/api/apply') { res.writeHead(404); res.end('Not found'); return; }
+      if (req.url !== '/api/apply') { sendJson(res, 404, { ok: false, error: 'Not found' }); return; }
 
       const { fname, lname, phone, age, email, country, passport, skills, note } = data;
 
       const parsedAge = Number(age);
       if (!fname || !lname || !phone || !email || !country || !passport || !Number.isFinite(parsedAge) || parsedAge < 21 || parsedAge > 55) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: 'Complete applicant details and an age between 21 and 55 are required.' }));
+        sendJson(res, 400, { ok: false, error: 'Complete applicant details and an age between 21 and 55 are required.' });
         return;
       }
 
@@ -135,12 +235,14 @@ const server = http.createServer(async (req, res) => {
         status: 'new'
       });
 
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true }));
+      sendJson(res, 200, { ok: true });
     } catch (err) {
-      console.error(err);
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: false }));
+      const status = err.status || (err instanceof SyntaxError ? 400 : 500);
+      if (status >= 500) console.error(err);
+      sendJson(res, status, {
+        ok: false,
+        error: status >= 500 ? 'The service is temporarily unavailable.' : err.message
+      });
     }
   });
 });

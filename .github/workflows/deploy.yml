@@ -10,11 +10,18 @@ jobs:
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          GEMINI_API_KEY_1: ${{ secrets.GEMINI_API_KEY_1 }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
+          GEMINI_API_KEY_3: ${{ secrets.GEMINI_API_KEY_3 }}
+          GEMINI_API_KEY_4: ${{ secrets.GEMINI_API_KEY_4 }}
+          GEMINI_API_KEY_5: ${{ secrets.GEMINI_API_KEY_5 }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: root
           key: ${{ secrets.VPS_SSH_KEY }}
           command_timeout: 5m
+          envs: GEMINI_API_KEY_1,GEMINI_API_KEY_2,GEMINI_API_KEY_3,GEMINI_API_KEY_4,GEMINI_API_KEY_5
           script: |
             set -e
 
@@ -28,6 +35,12 @@ jobs:
               git clone https://github.com/oscarkay99/Travel.git "$REPO_DIR"
             fi
 
+            # Refuse deployment when the agent or browser scripts fail validation
+            docker run --rm -v "$REPO_DIR:/work:ro" -w /work node:20-alpine \
+              node --test api/ai/agent.test.js
+            docker run --rm -v "$REPO_DIR:/work:ro" -w /work node:20-alpine \
+              node --check api/server.js
+
             # Deploy static files
             cp "$REPO_DIR/index.html" /opt/rogernort/nginx/html/
             cp "$REPO_DIR/privacy-policy.html" "$REPO_DIR/terms.html" /opt/rogernort/nginx/html/
@@ -37,14 +50,45 @@ jobs:
 
             # Rebuild API container if sources changed
             cp -r "$REPO_DIR/api/." /opt/rogernort/api/
+            mkdir -p /opt/rogernort/api/data
+            cp "$REPO_DIR/data/agent-knowledge.json" /opt/rogernort/api/data/agent-knowledge.json
+
+            # Apply the idempotent agent conversation schema before starting the API
+            if docker compose -f /opt/rogernort/supabase/docker-compose.yml config --services | grep -qx db; then
+              docker compose -f /opt/rogernort/supabase/docker-compose.yml exec -T db \
+                psql -v ON_ERROR_STOP=1 -U postgres -d postgres \
+                < "$REPO_DIR/supabase/migrations/001_agent_conversations.sql"
+            else
+              echo "Supabase database service 'db' was not found; refusing an incomplete agent deployment."
+              exit 1
+            fi
 
             # Inject Supabase service key from VPS .env into override file (key never touches git)
             SUPA_KEY=$(grep '^SERVICE_ROLE_KEY=' /opt/rogernort/supabase/.env | cut -d= -f2-)
-            printf 'services:\n  api:\n    environment:\n      - SUPA_URL=http://supa-kong:8000\n      - SUPA_SERVICE_KEY=%s\n' "$SUPA_KEY" > /opt/rogernort/docker-compose.override.yml
+            printf 'services:\n  api:\n    environment:\n      - SUPA_URL=http://supa-kong:8000\n      - SUPA_SERVICE_KEY=%s\n      - GEMINI_API_KEY_1=%s\n      - GEMINI_API_KEY_2=%s\n      - GEMINI_API_KEY_3=%s\n      - GEMINI_API_KEY_4=%s\n      - GEMINI_API_KEY_5=%s\n' \
+              "$SUPA_KEY" "$GEMINI_API_KEY_1" "$GEMINI_API_KEY_2" "$GEMINI_API_KEY_3" "$GEMINI_API_KEY_4" "$GEMINI_API_KEY_5" \
+              > /opt/rogernort/docker-compose.override.yml
+            chmod 600 /opt/rogernort/docker-compose.override.yml
 
             cd /opt/rogernort
             docker compose build api
             docker compose up -d --no-deps --force-recreate api
+
+            # Confirm all five projects reached the container and one grounded
+            # non-sensitive conversation completes through the production API.
+            for ATTEMPT in 1 2 3 4 5 6; do
+              STATUS_JSON=$(curl -fsS https://rogernortconsult.com/api/agent/status || true)
+              if echo "$STATUS_JSON" | grep -q '"configuredProjects":5'; then
+                break
+              fi
+              sleep 5
+            done
+            echo "$STATUS_JSON" | grep -q '"configuredProjects":5'
+
+            CHAT_JSON=$(curl -fsS -X POST https://rogernortconsult.com/api/agent/chat \
+              -H 'Content-Type: application/json' \
+              --data '{"message":"Where is your office and when are you open?"}')
+            echo "$CHAT_JSON" | grep -q '"ok":true'
 
             echo "✓ Deployed at $(date)"
 

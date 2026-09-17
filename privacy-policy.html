@@ -228,7 +228,7 @@
     <!-- 2 -->
     <div class="section" id="data-collected">
       <h2>2. What Data We Collect</h2>
-      <p>We collect personal data only when you voluntarily submit one of our two on-site forms.</p>
+      <p>We collect information when you voluntarily submit an on-site form or send a message to our digital travel adviser.</p>
 
       <h3>Work Abroad Application Form</h3>
       <table class="data-table">
@@ -240,7 +240,7 @@
           <tr><td>WhatsApp phone number</td><td>Yes</td><td>055 123 4567</td></tr>
           <tr><td>Age</td><td>Yes</td><td>28</td></tr>
           <tr><td>Email address</td><td>Yes</td><td>john@email.com</td></tr>
-          <tr><td>Preferred country</td><td>Yes</td><td>Czech Republic, Poland…</td></tr>
+          <tr><td>Preferred country</td><td>Yes</td><td>Czech Republic / consultation</td></tr>
           <tr><td>Passport status</td><td>Yes</td><td>Valid / Expired / None</td></tr>
           <tr><td>Occupation / work experience</td><td>No</td><td>Welder, Nurse, Driver…</td></tr>
           <tr><td>Additional notes</td><td>No</td><td>Work history, questions</td></tr>
@@ -260,7 +260,19 @@
         </tbody>
       </table>
 
-      <p>We do <strong>not</strong> collect payment information, national ID numbers, passport numbers, biometric data, or any sensitive data categories beyond what is listed above. We do not install tracking scripts or advertising pixels.</p>
+      <h3>Digital Travel Adviser</h3>
+      <table class="data-table">
+        <thead>
+          <tr><th>Data Point</th><th>Required?</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Your chat message</td><td>Yes</td><td>Answering your travel or work-abroad question</td></tr>
+          <tr><td>Random session identifier</td><td>Automatic</td><td>Keeping messages within the same conversation</td></tr>
+          <tr><td>Technical and safety events</td><td>Automatic</td><td>Security, reliability and human handoff</td></tr>
+        </tbody>
+      </table>
+
+      <p>Our forms and digital adviser do <strong>not</strong> request payment-card information, national ID numbers, passport numbers, biometric data or document uploads. Automated filters attempt to remove common phone, email, Ghana Card, passport and payment-card patterns before an adviser message is sent for AI processing, but no automated filter is perfect. Please do not enter sensitive information in the chat. We do not install tracking scripts or advertising pixels.</p>
     </div>
 
     <hr class="divider" />
@@ -271,6 +283,7 @@
       <ul>
         <li><strong>Work Abroad applications:</strong> To assess eligibility and contact you about EU job placement opportunities. This is the primary purpose of the application form.</li>
         <li><strong>Trip enquiries:</strong> To follow up with a personalised travel proposal matching your stated destination and preferences.</li>
+        <li><strong>Digital adviser:</strong> To answer questions using approved Rogernort information, protect the service from misuse and transfer unresolved questions to a human adviser.</li>
         <li><strong>WhatsApp communication:</strong> When you submit a form, a summary is also sent to our business WhatsApp number so our team can respond quickly.</li>
         <li><strong>Service improvement:</strong> Aggregated, anonymised data (e.g., which countries are most requested) may be reviewed to improve our services. This does not involve individual profiling.</li>
       </ul>
@@ -291,6 +304,7 @@
         <li>A copy of the key details is also delivered via WhatsApp to our business number (+233 55 949 9248) so we can respond promptly.</li>
         <li>Application data may be stored in a password-protected PostgreSQL database on the same VPS. Only authorised Rogernort staff have database access.</li>
       </ol>
+      <p>When you use the digital adviser, the message is sent over HTTPS to our backend, automatically checked for common sensitive-data patterns, and then processed using Google's Gemini API. Only Rogernort information approved for public use is included as reference material. On Gemini's free tier, Google states that submitted content may be used to improve its products; for that reason, you must not use the adviser to send identity documents, financial details or other confidential information.</p>
       <p>Our server is hosted on Hostinger VPS infrastructure with Ubuntu 24.04 LTS. All connections to the site and API use HTTPS certificates from Let's Encrypt.</p>
     </div>
 
@@ -304,6 +318,7 @@
         <li><strong>Resend</strong> — our transactional email provider, which processes and delivers emails on our behalf. Resend is subject to its own privacy policy and processes data as a data processor.</li>
         <li><strong>WhatsApp / Meta</strong> — when your summary is delivered to our WhatsApp, it passes through Meta's platform. Meta's privacy policy governs their handling of message content.</li>
         <li><strong>Hosting infrastructure</strong> — Hostinger provides the server on which data may be temporarily or persistently stored.</li>
+        <li><strong>Google Gemini API</strong> — processes redacted digital-adviser messages and generates responses, subject to Google's applicable terms and privacy notices.</li>
       </ul>
       <p>No other third parties receive your personal data.</p>
     </div>
@@ -320,6 +335,7 @@
         <li><strong>Active enquiries:</strong> Data is kept for the duration of the application or travel planning process.</li>
         <li><strong>Completed or declined enquiries:</strong> Retained for up to <strong>24 months</strong> from the last contact, then deleted.</li>
         <li><strong>Email inbox copies:</strong> Subject to our email provider's standard retention. We review and purge old enquiries annually.</li>
+        <li><strong>Digital-adviser conversations:</strong> Retained for service follow-up, safety review and quality improvement for no longer than the general 24-month enquiry period, unless earlier deletion is requested or longer retention is legally required.</li>
       </ul>
       <p>You may request earlier deletion at any time (see <a href="#your-rights">Your Rights</a>).</p>
     </div>
@@ -332,12 +348,13 @@
       <p>
         This website does <strong>not</strong> use advertising cookies, tracking cookies, or any third-party analytics scripts (e.g., Google Analytics, Facebook Pixel).
       </p>
-      <p>We use <strong>localStorage</strong> — a browser-based storage mechanism — for two purposes:</p>
+      <p>We use limited browser storage for essential site functions:</p>
       <ul>
         <li>Remembering your cookie consent preference so we do not show the banner on every visit.</li>
         <li>Minor UI state (e.g., preloader dismissed).</li>
+        <li>Keeping a random digital-adviser session identifier for the current browser tab.</li>
       </ul>
-      <p>No personal data is stored in cookies or localStorage. You can clear this data at any time from your browser settings under "Site Data" or "Storage".</p>
+      <p>The browser session identifier does not contain your name or message content. You can clear this data at any time from your browser settings under "Site Data" or "Storage".</p>
       <p>External resources loaded by the site include Google Fonts (for typography) and Mixkit (for the hero video). These third-party domains may set their own cookies subject to their respective privacy policies. Loading fonts requires your browser to make a request to Google's servers, which may log your IP address per Google's standard logging practices.</p>
     </div>
 
