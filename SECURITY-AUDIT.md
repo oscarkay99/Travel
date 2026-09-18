@@ -8,7 +8,7 @@ and the self-hosted Supabase interfaces used by the application.
 
 | Area | Before | After hardening | Notes |
 |---|---:|---:|---|
-| Secrets and deployment | 7/10 | 9/10 | No real secret was found in tracked source/history; GitHub push protection is enabled. |
+| Secrets and deployment | 7/10 | 10/10 | No real secret was found in tracked source/history; push protection and protected-branch checks are enabled. |
 | API and input security | 4/10 | 9/10 | Strict schemas, limits, safe errors, origin checks and bounded bodies added. |
 | Form and bot protection | 2/10 | 7/10 | Distributed limits, timing trap, honeypot and duplicate suppression are active in code; Turnstile awaits its two credentials. |
 | Browser/XSS security | 4/10 | 9/10 | Stored-email and CMS DOM injection paths fixed; CSP and framing controls added. |
@@ -143,15 +143,15 @@ upload, package dependency tree, or CMS/admin interface in this repository.
 6. **Remaining risk:** Users may independently choose to share information through WhatsApp.
 7. **Future action:** Continue collecting only the minimum fields needed.
 
-### MEDIUM — Main branch has no protection (open)
+### MEDIUM — Main branch had no protection (fixed)
 
 1. **Finding:** GitHub reports no protection rule for `main`.
 2. **Risk:** An accidental or compromised direct push can deploy immediately to production.
 3. **Evidence:** GitHub branch-protection API returned “Branch not protected”.
 4. **Affected component:** Source-control and deployment governance.
-5. **Fix implemented:** Deployment itself now runs tests, syntax checks, migrations, Nginx validation and smoke checks before completion.
-6. **Remaining risk:** A direct push can still start the workflow without review.
-7. **Future action:** Require a pull request and the deploy/test status check while preserving an owner break-glass path.
+5. **Fix implemented:** `main` now requires one approving review, the `Security checks` workflow, an up-to-date branch, linear history and resolved conversations. Force-pushes and deletion are disabled.
+6. **Remaining risk:** Repository administrators retain a deliberate emergency bypass path.
+7. **Future action:** Periodically review administrator access and branch-rule audit events.
 
 ### LOW — Public database client configuration in browser (fixed)
 
@@ -173,15 +173,15 @@ upload, package dependency tree, or CMS/admin interface in this repository.
 6. **Remaining risk:** Endpoint existence remains observable, as expected for a public API.
 7. **Future action:** None required unless private operational metrics are later added.
 
-### LOW — Duplicate Nginx server-name definitions (open)
+### LOW — Duplicate Nginx server-name definitions (fixed)
 
 1. **Finding:** Host Nginx reports duplicate `rogernortconsult.com` and `www.rogernortconsult.com` listeners across legacy site files.
 2. **Risk:** Nginx ignores later duplicates, which can cause configuration drift or future changes to be applied to an inactive block.
 3. **Evidence:** Live `nginx -t` succeeds but emits conflicting-server-name warnings on ports 80 and 443.
 4. **Affected component:** Host Nginx site configuration.
-5. **Fix implemented:** Deployment now targets the verified static site config and confirms the expected hostname/document root before editing; live headers prove the active response is hardened.
-6. **Remaining risk:** The redundant legacy blocks remain on the host.
-7. **Future action:** During a maintenance window, compare `rogernort-https` and `rogernort-www`, archive the inactive definitions, then run `nginx -t` and verify HTTP, HTTPS, API and certificate routing before reload.
+5. **Fix implemented:** The rollback copy that Nginx was mistakenly loading from `sites-enabled` was moved to a root-only backup directory. Future backups are created outside the included configuration directory.
+6. **Remaining risk:** None observed; `nginx -t` and the live deployment completed without duplicate-server warnings.
+7. **Future action:** Keep rollback files outside `sites-enabled` and `conf.d`.
 
 ## Secret and data findings
 
@@ -223,6 +223,7 @@ configuration-controlled destinations; no user-controlled SSRF sink was found.
 - HTTPS redirects, certificate coverage, TLS 1.1 rejection and TLS 1.2/1.3 support checked.
 - Production method/CORS/header checks and anonymous RLS row-count checks.
 - Successful production workflow run `35317350203`, including API/content/chat smoke tests and Cloudflare cache purge.
+- Successful follow-up run `35326845017`, confirming the Nginx duplicate cleanup and Cloudflare capability audit.
 - Final external verification: homepage 200, seven hardened header families, minimal status response, and public content returning two destinations and six testimonials.
 - Repository secret-pattern and local-value/history comparison without printing secret values.
 
@@ -272,6 +273,7 @@ Never place real values in `.env.example`, source control, frontend JavaScript o
 - [x] Secure event logging added without raw IPs or PII
 - [x] Production build, migration and configuration checks added
 - [x] API-to-PostgREST networking and public-content smoke test verified live
+- [x] Main branch protection and pull-request security checks enabled
+- [x] Duplicate Nginx configuration removed from the active include directory
 - [x] Rollback path preserved
 - [ ] Cloudflare origin bypass closed (manual origin-authentication change required)
-- [ ] Main branch protection enabled (manual repository-governance decision required)
