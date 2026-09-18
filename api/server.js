@@ -92,8 +92,15 @@ function readJson(req) {
   });
 }
 
-function supaRequest(method, route, body, { prefer = 'return=minimal', timeoutMs = SUPA_TIMEOUT_MS } = {}) {
+function supaRequest(method, route, body, {
+  prefer = 'return=minimal',
+  timeoutMs = SUPA_TIMEOUT_MS,
+  schema = 'rogernort'
+} = {}) {
   if (!SUPA_SERVICE_KEY) return Promise.reject(new Error('Database service is not configured.'));
+  if (!['rogernort', 'public'].includes(schema)) {
+    return Promise.reject(new Error('Database schema is not allowed.'));
+  }
   const base = new URL(SUPA_URL);
   if (!['http:', 'https:'].includes(base.protocol)) return Promise.reject(new Error('Database URL is invalid.'));
   const target = new URL(route, `${base.origin}/`);
@@ -102,8 +109,8 @@ function supaRequest(method, route, body, { prefer = 'return=minimal', timeoutMs
   const headers = {
     apikey: SUPA_SERVICE_KEY,
     Authorization: `Bearer ${SUPA_SERVICE_KEY}`,
-    'Accept-Profile': 'rogernort',
-    'Content-Profile': 'rogernort',
+    'Accept-Profile': schema,
+    'Content-Profile': schema,
     Accept: 'application/json'
   };
   if (prefer) headers.Prefer = prefer;
@@ -271,8 +278,8 @@ function sendApplicationEmail(application) {
 
 async function getPublicContent() {
   const [destinations, testimonials] = await Promise.all([
-    supaRequest('GET', '/rest/v1/destinations?select=name,region,image_url,price_from,badge&active=eq.true&order=sort_order.asc&limit=6', undefined, { prefer: null }),
-    supaRequest('GET', '/rest/v1/testimonials?select=name,destination,rating,content&active=eq.true&order=sort_order.asc&limit=6', undefined, { prefer: null })
+    supaRequest('GET', '/rest/v1/destinations?select=name,region,image_url,price_from,badge&active=eq.true&order=sort_order.asc&limit=6', undefined, { prefer: null, schema: 'public' }),
+    supaRequest('GET', '/rest/v1/testimonials?select=name,destination,rating,content&active=eq.true&order=sort_order.asc&limit=6', undefined, { prefer: null, schema: 'public' })
   ]);
   return {
     destinations: Array.isArray(destinations) ? destinations : [],

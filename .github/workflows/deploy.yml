@@ -147,6 +147,9 @@ jobs:
             done
             echo "$STATUS_JSON" | grep -q '"ok":true'
 
+            CONTENT_JSON=$(curl -fsS https://rogernortconsult.com/api/content)
+            echo "$CONTENT_JSON" | grep -q '"ok":true'
+
             CHAT_JSON=$(curl -fsS -X POST https://rogernortconsult.com/api/agent/chat \
               -H 'Content-Type: application/json' \
               -H 'Origin: https://rogernortconsult.com' \
