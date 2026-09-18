@@ -149,6 +149,16 @@ jobs:
 
             if ! CONTENT_JSON=$(curl -fsS https://rogernortconsult.com/api/content); then
               echo "Public content smoke test failed; safe schema diagnostics follow:"
+              for CONTENT_ROUTE in \
+                'destinations?select=name,region,image_url,price_from,badge&active=eq.true&order=sort_order.asc&limit=0' \
+                'testimonials?select=name,destination,rating,content&active=eq.true&order=sort_order.asc&limit=0'; do
+                curl -sS --max-time 10 -w '\nPostgREST HTTP=%{http_code}\n' \
+                  "http://127.0.0.1:8010/rest/v1/$CONTENT_ROUTE" \
+                  -H "apikey: $SUPA_KEY" \
+                  -H "Authorization: Bearer $SUPA_KEY" \
+                  -H 'Accept-Profile: rogernort' \
+                  -H 'Accept: application/json'
+              done
               docker compose -f /opt/rogernort/supabase/docker-compose.yml exec -T \
                 -e PGPASSWORD="$DB_PASSWORD" db \
                 psql -At -U "$SCHEMA_OWNER" -d postgres -c \

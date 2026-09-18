@@ -125,7 +125,13 @@ function supaRequest(method, route, body, { prefer = 'return=minimal', timeoutMs
       response.on('data', (chunk) => { if (responseBody.length < 512 * 1024) responseBody += chunk; });
       response.on('end', () => {
         if (response.statusCode < 200 || response.statusCode >= 300) {
-          return reject(new Error(`Database request returned HTTP ${response.statusCode}.`));
+          const upstreamError = new Error(`Database request returned HTTP ${response.statusCode}.`);
+          upstreamError.upstreamStatus = response.statusCode;
+          try {
+            const parsed = JSON.parse(responseBody);
+            if (/^[A-Z0-9_]{2,24}$/.test(String(parsed.code || ''))) upstreamError.upstreamCode = parsed.code;
+          } catch (_) {}
+          return reject(upstreamError);
         }
         if (!responseBody) return resolve(null);
         try { resolve(JSON.parse(responseBody)); }
@@ -391,7 +397,11 @@ async function handleRequest(req, res) {
     if ([403, 413, 429].includes(status)) {
       securityEvent(error.code || 'request_rejected', { requestId, endpoint: path, status });
     } else if (status >= 500) {
-      console.error(JSON.stringify({ level: 'error', event: 'request_failed', requestId, endpoint: path }));
+      console.error(JSON.stringify({
+        level: 'error', event: 'request_failed', requestId, endpoint: path,
+        upstreamStatus: Number(error.upstreamStatus) || undefined,
+        upstreamCode: error.upstreamCode || undefined
+      }));
     }
     return sendJson(res, status, {
       ok: false,
