@@ -122,7 +122,14 @@ jobs:
             fi
             case "$NGINX_CONF_SOURCE" in
               /opt/rogernort/*) ;;
-              *) echo "Refusing to edit unexpected Nginx path: $NGINX_CONF_SOURCE"; exit 1 ;;
+              *)
+                echo "Refusing to edit unexpected Nginx path: $NGINX_CONF_SOURCE"
+                echo "Sanitized Nginx structure for scope verification:"
+                docker exec "$NGINX_CONTAINER" nginx -T 2>&1 \
+                  | grep -E '^[[:space:]]*(# configuration file|server_name|root|location|proxy_pass)' \
+                  || true
+                exit 1
+                ;;
             esac
             if [ ! -f "$NGINX_CONF_SOURCE" ]; then
               echo "Static-site Nginx configuration was not found."
