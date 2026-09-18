@@ -1,6 +1,6 @@
 # Rogernort Travel & Tour Security Audit
 
-Audit date: 17 September 2026  
+Audit date: 18 September 2026
 Scope: `rogernortconsult.com`, its repository, public API, deployment workflow,
 and the self-hosted Supabase interfaces used by the application.
 
@@ -93,6 +93,16 @@ upload, package dependency tree, or CMS/admin interface in this repository.
 6. **Remaining risk:** Fixed windows permit a small burst at window boundaries; direct-origin access weakens IP-header confidence.
 7. **Future action:** After origin authentication, tune limits from observed 429 metrics.
 
+### MEDIUM — API database hostname was not resolvable (fixed)
+
+1. **Finding:** The API container used the nonexistent Docker hostname `supa-kong` while the shared-network Kong service is named `rogernort-kong`.
+2. **Risk:** Public content returned 500 responses; database form storage, conversation logging, distributed throttling and duplicate suppression could not reach PostgREST.
+3. **Evidence:** A zero-row in-container request returned DNS error `EAI_AGAIN`; both containers were confirmed on `rogernort_rogernort-net`, and the real Kong container name was verified without exposing credentials or records.
+4. **Affected component:** API-to-Supabase service networking.
+5. **Fix implemented:** Production, the server default and `.env.example` now use `http://rogernort-kong:8000`.
+6. **Remaining risk:** Docker container naming remains an infrastructure dependency.
+7. **Future action:** Keep `/api/content` in the deployment smoke suite; it now prevents a deployment from succeeding when PostgREST is unreachable.
+
 ### MEDIUM — No layered bot/duplicate controls (partially fixed)
 
 1. **Finding:** Automated submissions could call forms directly without a challenge, honeypot or duplicate check.
@@ -163,6 +173,16 @@ upload, package dependency tree, or CMS/admin interface in this repository.
 6. **Remaining risk:** Endpoint existence remains observable, as expected for a public API.
 7. **Future action:** None required unless private operational metrics are later added.
 
+### LOW — Duplicate Nginx server-name definitions (open)
+
+1. **Finding:** Host Nginx reports duplicate `rogernortconsult.com` and `www.rogernortconsult.com` listeners across legacy site files.
+2. **Risk:** Nginx ignores later duplicates, which can cause configuration drift or future changes to be applied to an inactive block.
+3. **Evidence:** Live `nginx -t` succeeds but emits conflicting-server-name warnings on ports 80 and 443.
+4. **Affected component:** Host Nginx site configuration.
+5. **Fix implemented:** Deployment now targets the verified static site config and confirms the expected hostname/document root before editing; live headers prove the active response is hardened.
+6. **Remaining risk:** The redundant legacy blocks remain on the host.
+7. **Future action:** During a maintenance window, compare `rogernort-https` and `rogernort-www`, archive the inactive definitions, then run `nginx -t` and verify HTTP, HTTPS, API and certificate routing before reload.
+
 ## Secret and data findings
 
 - `.env` is ignored and is not tracked.
@@ -196,11 +216,14 @@ configuration-controlled destinations; no user-controlled SSRF sink was found.
 - Browser-script syntax and JSON-LD parsing.
 - Automated equality check between all inline script hashes and deployed CSP.
 - Nginx configuration validation in an isolated official Nginx container.
+- Live host-level Nginx validation with automatic rollback before reload.
 - Node 24 API image build and non-root UID verification.
 - Both SQL migrations applied to a disposable PostgreSQL 17 instance.
 - Rate-limit function, duplicate accept/reject behavior and anonymous privilege denial exercised.
 - HTTPS redirects, certificate coverage, TLS 1.1 rejection and TLS 1.2/1.3 support checked.
 - Production method/CORS/header checks and anonymous RLS row-count checks.
+- Successful production workflow run `35317350203`, including API/content/chat smoke tests and Cloudflare cache purge.
+- Final external verification: homepage 200, seven hardened header families, minimal status response, and public content returning two destinations and six testimonials.
 - Repository secret-pattern and local-value/history comparison without printing secret values.
 
 Destructive database testing, denial-of-service testing, credential brute force,
@@ -209,9 +232,9 @@ third-party systems were not tested.
 
 ## Required environment variables
 
-Existing required production secrets remain unchanged. New optional/recommended values:
+Production secret/configuration status:
 
-- `RATE_LIMIT_HASH_SECRET`: dedicated random HMAC key; the server safely falls back to the server-only Supabase service key until this is added.
+- `RATE_LIMIT_HASH_SECRET`: dedicated random HMAC key is installed in GitHub Actions and injected server-side.
 - `TURNSTILE_SITE_KEY`: public widget key.
 - `TURNSTILE_SECRET_KEY`: private server verification key.
 
@@ -248,6 +271,7 @@ Never place real values in `.env.example`, source control, frontend JavaScript o
 - [x] Personal-data flow reduced
 - [x] Secure event logging added without raw IPs or PII
 - [x] Production build, migration and configuration checks added
+- [x] API-to-PostgREST networking and public-content smoke test verified live
 - [x] Rollback path preserved
 - [ ] Cloudflare origin bypass closed (manual origin-authentication change required)
 - [ ] Main branch protection enabled (manual repository-governance decision required)
