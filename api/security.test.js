@@ -95,7 +95,10 @@ test('email HTML escaping neutralizes active markup', () => {
 test('browser scripts are syntactically valid and covered by the deployed CSP hashes', () => {
   const root = path.resolve(__dirname, '..');
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-  const nginx = fs.readFileSync(path.join(root, 'deploy/nginx-security-headers.conf'), 'utf8');
+  const nginx = [
+    fs.readFileSync(path.join(root, 'deploy/nginx-security-headers.conf'), 'utf8'),
+    fs.readFileSync(path.join(root, 'deploy/nginx-security-headers.inc'), 'utf8')
+  ].join('\n');
   const scripts = [...html.matchAll(/<script(?:\s+type="application\/ld\+json")?>([\s\S]*?)<\/script>/g)];
   assert.equal(scripts.length, 3);
   assert.doesNotThrow(() => new Function(scripts[0][1]));

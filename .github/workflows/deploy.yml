@@ -109,6 +109,19 @@ jobs:
             fi
             docker cp "$REPO_DIR/deploy/nginx-security-headers.conf" \
               "$NGINX_CONTAINER:/etc/nginx/conf.d/zz-security-headers.conf"
+            docker cp "$REPO_DIR/deploy/nginx-security-headers.inc" \
+              "$NGINX_CONTAINER:/etc/nginx/security-headers.inc"
+            docker exec "$NGINX_CONTAINER" sh -c '
+              CONF=$(grep -l "root /usr/share/nginx/html" /etc/nginx/conf.d/*.conf | head -n 1)
+              if [ -z "$CONF" ]; then
+                echo "Static-site Nginx configuration was not found."
+                exit 1
+              fi
+              if ! grep -q "include /etc/nginx/security-headers.inc;" "$CONF"; then
+                cp "$CONF" "$CONF.pre-rogernort-security"
+                sed -i "/^[[:space:]]*location[[:space:]].*{[[:space:]]*$/a\\        include /etc/nginx/security-headers.inc;" "$CONF"
+              fi
+            '
             docker exec "$NGINX_CONTAINER" nginx -t
             docker exec "$NGINX_CONTAINER" nginx -s reload
 
