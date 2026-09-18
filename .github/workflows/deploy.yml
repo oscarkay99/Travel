@@ -111,20 +111,30 @@ jobs:
               "$NGINX_CONTAINER:/etc/nginx/conf.d/zz-security-headers.conf"
             docker cp "$REPO_DIR/deploy/nginx-security-headers.inc" \
               "$NGINX_CONTAINER:/etc/nginx/security-headers.inc"
-            docker exec "$NGINX_CONTAINER" sh -c '
-              CONF=$(grep -l "root /usr/share/nginx/html" /etc/nginx/conf.d/*.conf | head -n 1)
-              if [ -z "$CONF" ]; then
-                echo "Static-site Nginx configuration was not found."
-                exit 1
-              fi
-              if ! grep -q "include /etc/nginx/security-headers.inc;" "$CONF"; then
-                cp "$CONF" "$CONF.pre-rogernort-security"
-                sed "/^[[:space:]]*location[[:space:]].*{[[:space:]]*$/a\\        include /etc/nginx/security-headers.inc;" \
-                  "$CONF" > /tmp/rogernort-nginx.conf
-                cat /tmp/rogernort-nginx.conf > "$CONF"
-                rm /tmp/rogernort-nginx.conf
-              fi
-            '
+            NGINX_CONF_SOURCE=$(docker inspect --format \
+              '{{range .Mounts}}{{if eq .Destination "/etc/nginx/conf.d/default.conf"}}{{.Source}}{{end}}{{end}}' \
+              "$NGINX_CONTAINER")
+            if [ -z "$NGINX_CONF_SOURCE" ]; then
+              NGINX_CONF_DIR=$(docker inspect --format \
+                '{{range .Mounts}}{{if eq .Destination "/etc/nginx/conf.d"}}{{.Source}}{{end}}{{end}}' \
+                "$NGINX_CONTAINER")
+              NGINX_CONF_SOURCE="$NGINX_CONF_DIR/default.conf"
+            fi
+            case "$NGINX_CONF_SOURCE" in
+              /opt/rogernort/*) ;;
+              *) echo "Refusing to edit unexpected Nginx path: $NGINX_CONF_SOURCE"; exit 1 ;;
+            esac
+            if [ ! -f "$NGINX_CONF_SOURCE" ]; then
+              echo "Static-site Nginx configuration was not found."
+              exit 1
+            fi
+            if ! grep -q "include /etc/nginx/security-headers.inc;" "$NGINX_CONF_SOURCE"; then
+              cp "$NGINX_CONF_SOURCE" "$NGINX_CONF_SOURCE.pre-rogernort-security"
+              sed "/^[[:space:]]*location[[:space:]].*{[[:space:]]*$/a\\        include /etc/nginx/security-headers.inc;" \
+                "$NGINX_CONF_SOURCE" > /tmp/rogernort-nginx.conf
+              cat /tmp/rogernort-nginx.conf > "$NGINX_CONF_SOURCE"
+              rm /tmp/rogernort-nginx.conf
+            fi
             docker exec "$NGINX_CONTAINER" nginx -t
             docker exec "$NGINX_CONTAINER" nginx -s reload
 
