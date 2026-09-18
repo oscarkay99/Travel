@@ -119,7 +119,10 @@ jobs:
               fi
               if ! grep -q "include /etc/nginx/security-headers.inc;" "$CONF"; then
                 cp "$CONF" "$CONF.pre-rogernort-security"
-                sed -i "/^[[:space:]]*location[[:space:]].*{[[:space:]]*$/a\\        include /etc/nginx/security-headers.inc;" "$CONF"
+                sed "/^[[:space:]]*location[[:space:]].*{[[:space:]]*$/a\\        include /etc/nginx/security-headers.inc;" \
+                  "$CONF" > /tmp/rogernort-nginx.conf
+                cat /tmp/rogernort-nginx.conf > "$CONF"
+                rm /tmp/rogernort-nginx.conf
               fi
             '
             docker exec "$NGINX_CONTAINER" nginx -t
