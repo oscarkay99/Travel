@@ -13,7 +13,7 @@ const {
 const RESEND_KEY = process.env.RESEND_API_KEY;
 const TO_EMAIL = process.env.TO_EMAIL || 'akwaabatoursa@gmail.com';
 const PORT = Number(process.env.PORT) || 3000;
-const SUPA_URL = process.env.SUPA_URL || 'http://supa-kong:8000';
+const SUPA_URL = process.env.SUPA_URL || 'http://rogernort-kong:8000';
 const SUPA_SERVICE_KEY = process.env.SUPA_SERVICE_KEY;
 const SUPA_TIMEOUT_MS = 2_500;
 const MAX_BODY_BYTES = 16 * 1024;
