@@ -170,6 +170,14 @@ if ! nginx -t; then
   echo "Required AOP Nginx configuration failed and was rolled back."
   exit 1
 fi
+
+MANAGED_BLOCKS=$(grep -Ec '^[[:space:]]*# BEGIN ROGERNORT MANAGED AOP$' "$NGINX_CONF" || true)
+ENFORCED_BLOCKS=$(grep -Ec '^[[:space:]]*ssl_verify_client[[:space:]]+on;' "$NGINX_CONF" || true)
+if [ "$MANAGED_BLOCKS" -eq 0 ] || [ "$ENFORCED_BLOCKS" -ne "$MANAGED_BLOCKS" ]; then
+  rollback_nginx
+  echo "AOP was not enforced consistently across the Rogernort TLS server blocks."
+  exit 1
+fi
 systemctl reload nginx
 
 PUBLIC_OK=false
@@ -189,17 +197,18 @@ if [ "$PUBLIC_OK" != true ]; then
   exit 1
 fi
 
-DIRECT_STATUS=$(curl -sS --max-time 10 \
+DIRECT_STATUS=$(curl -sS --noproxy '*' --max-time 10 \
   --resolve rogernortconsult.com:443:127.0.0.1 \
   -o /dev/null -w '%{http_code}' https://rogernortconsult.com/ || true)
 case "$DIRECT_STATUS" in
-  200|301|302)
-    apply_client_mode optional
-    nginx -t
-    systemctl reload nginx
-    echo "Direct origin request was not rejected; origin enforcement was relaxed."
-    exit 1
-    ;;
+  000|400) ;;
+  *)
+     # Public traffic has already passed through Cloudflare successfully. Keep
+     # strict verification enabled if this diagnostic is ever inconclusive;
+     # automatically weakening the origin here would undo the protection.
+     echo "Direct origin rejection check was inconclusive (HTTP $DIRECT_STATUS); strict AOP remains enabled."
+     exit 1
+     ;;
 esac
 
 echo "Authenticated Origin Pulls are active and direct origin access is rejected."
