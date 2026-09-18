@@ -10,11 +10,11 @@ and the self-hosted Supabase interfaces used by the application.
 |---|---:|---:|---|
 | Secrets and deployment | 7/10 | 10/10 | No real secret was found in tracked source/history; push protection and protected-branch checks are enabled. |
 | API and input security | 4/10 | 9/10 | Strict schemas, limits, safe errors, origin checks and bounded bodies added. |
-| Form and bot protection | 2/10 | 7/10 | Distributed limits, timing trap, honeypot and duplicate suppression are active in code; Turnstile awaits its two credentials. |
+| Form and bot protection | 2/10 | 9/10 | Distributed limits, timing trap, honeypot, duplicate suppression and managed Turnstile verification are active. |
 | Browser/XSS security | 4/10 | 9/10 | Stored-email and CMS DOM injection paths fixed; CSP and framing controls added. |
 | Database and personal data | 7/10 | 9/10 | Anonymous PII queries returned zero rows; grants are further restricted and direct browser access removed. |
-| Infrastructure edge | 5/10 | 6/10 | TLS is healthy, but the origin remains directly reachable and needs Cloudflare authenticated origin protection. |
-| Overall | 5/10 | 8/10 | Materially hardened; two external configuration actions remain. |
+| Infrastructure edge | 5/10 | 9/10 | TLS is healthy and both public hostnames require Cloudflare's authenticated client certificate at the origin. |
+| Overall | 5/10 | 9/10 | Materially hardened with live bot protection, origin authentication and protected deployments. |
 
 The score is a risk-oriented engineering assessment, not a guarantee that no
 vulnerability exists.
@@ -63,15 +63,15 @@ upload, package dependency tree, or CMS/admin interface in this repository.
 6. **Remaining risk:** Static, developer-authored `innerHTML` remains for controlled SVG/typing markup.
 7. **Future action:** Prefer DOM node construction for future user-controlled components.
 
-### HIGH — Cloudflare origin bypass (open; manual infrastructure action)
+### HIGH — Cloudflare origin bypass (fixed)
 
 1. **Finding:** The VPS responds to the production hostname when addressed directly, bypassing Cloudflare.
 2. **Risk:** Attackers can bypass Cloudflare WAF/rate controls and spoof Cloudflare client-IP headers at the origin.
 3. **Evidence:** A single non-destructive direct-origin request returned the live homepage without traversing Cloudflare.
 4. **Affected component:** VPS firewall/Nginx and Cloudflare origin authentication.
-5. **Fix implemented:** Application-level controls no longer trust `X-Forwarded-For`; distributed throttling remains active behind the proxy.
-6. **Remaining risk:** Direct-origin traffic is still possible until cryptographic origin authentication or equivalent network restriction is enabled.
-7. **Future action:** Enable Cloudflare Authenticated Origin Pulls for the main hostname and configure Nginx to require the Cloudflare client certificate. Test before enforcing so the owner is not locked out. Keep the intentionally public Supabase hostname separately routed.
+5. **Fix implemented:** Per-hostname Authenticated Origin Pulls use a dedicated private CA and client certificate for `rogernortconsult.com` and `www.rogernortconsult.com`; Nginx requires that certificate on both TLS server blocks. Deployment first uses optional verification, waits for Cloudflare association, then enforces it with automatic rollback.
+6. **Remaining risk:** The client certificate has a finite lifetime and must be renewed before expiry; the intentionally public Supabase hostname remains separately routed.
+7. **Future action:** Configure Cloudflare certificate-expiration alerts and rotate the AOP certificate during a maintenance window before expiry.
 
 ### MEDIUM — Public forms lacked complete server validation (fixed)
 
@@ -103,15 +103,15 @@ upload, package dependency tree, or CMS/admin interface in this repository.
 6. **Remaining risk:** Docker container naming remains an infrastructure dependency.
 7. **Future action:** Keep `/api/content` in the deployment smoke suite; it now prevents a deployment from succeeding when PostgREST is unreachable.
 
-### MEDIUM — No layered bot/duplicate controls (partially fixed)
+### MEDIUM — No layered bot/duplicate controls (fixed)
 
 1. **Finding:** Automated submissions could call forms directly without a challenge, honeypot or duplicate check.
 2. **Risk:** Spam, fake applications, database growth and staff-email flooding.
 3. **Evidence:** Previous endpoints accepted any valid JSON repeatedly.
 4. **Affected component:** Application and trip-enquiry forms.
-5. **Fix implemented:** Honeypots, minimum completion time, distributed limits and 24-hour HMAC duplicate suppression. Turnstile client/server verification is implemented.
-6. **Remaining risk:** Turnstile remains inactive until both production keys are installed.
-7. **Future action:** Create one managed Turnstile widget restricted to `rogernortconsult.com` and `www.rogernortconsult.com`, then add the site/secret keys as GitHub Actions secrets.
+5. **Fix implemented:** Honeypots, minimum completion time, distributed limits, 24-hour HMAC duplicate suppression and Cloudflare Turnstile client/server verification are active.
+6. **Remaining risk:** Automated abuse cannot be eliminated completely; challenge effectiveness should be monitored alongside 429 and rejection events.
+7. **Future action:** Review Turnstile analytics and rate-limit metrics quarterly, adjusting thresholds only from observed traffic.
 
 ### MEDIUM — Missing security response headers (fixed in deployment)
 
@@ -224,6 +224,7 @@ configuration-controlled destinations; no user-controlled SSRF sink was found.
 - Production method/CORS/header checks and anonymous RLS row-count checks.
 - Successful production workflow run `35317350203`, including API/content/chat smoke tests and Cloudflare cache purge.
 - Successful follow-up run `35326845017`, confirming the Nginx duplicate cleanup and Cloudflare capability audit.
+- Successful production run `35341825821`, creating/reusing Turnstile, activating both per-hostname AOP associations, enforcing Nginx client verification, rejecting direct-origin access and purging cache.
 - Final external verification: homepage 200, seven hardened header families, minimal status response, and public content returning two destinations and six testimonials.
 - Repository secret-pattern and local-value/history comparison without printing secret values.
 
@@ -236,8 +237,9 @@ third-party systems were not tested.
 Production secret/configuration status:
 
 - `RATE_LIMIT_HASH_SECRET`: dedicated random HMAC key is installed in GitHub Actions and injected server-side.
-- `TURNSTILE_SITE_KEY`: public widget key.
-- `TURNSTILE_SECRET_KEY`: private server verification key.
+- `TURNSTILE_SITE_KEY`: provisioned from the restricted managed widget during deployment and injected without logging.
+- `TURNSTILE_SECRET_KEY`: retrieved server-side during deployment, masked immediately and injected without entering source control.
+- `CLOUDFLARE_API_TOKEN`: scoped to the Rogernort account/zone for Turnstile, SSL certificates, zone read and cache purge operations.
 
 Never place real values in `.env.example`, source control, frontend JavaScript or logs.
 
@@ -256,7 +258,7 @@ Never place real values in `.env.example`, source control, frontend JavaScript o
 - [x] Forms validated server-side with strict schemas and bounds
 - [x] Distributed and local rate limiting implemented
 - [x] Honeypot, timing and duplicate bot controls active
-- [ ] Turnstile active (credentials required)
+- [x] Turnstile active with hostname-restricted managed widget
 - [x] Stored/reflected/DOM XSS paths reviewed and identified paths fixed
 - [x] SQL construction reviewed; user input is never concatenated into SQL
 - [x] CSRF applicability reviewed; no cookie-authenticated endpoints exist, origin checks added
@@ -276,4 +278,4 @@ Never place real values in `.env.example`, source control, frontend JavaScript o
 - [x] Main branch protection and pull-request security checks enabled
 - [x] Duplicate Nginx configuration removed from the active include directory
 - [x] Rollback path preserved
-- [ ] Cloudflare origin bypass closed (manual origin-authentication change required)
+- [x] Cloudflare origin bypass closed with per-hostname authenticated origin pulls
