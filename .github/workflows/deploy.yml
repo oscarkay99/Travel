@@ -147,7 +147,18 @@ jobs:
             done
             echo "$STATUS_JSON" | grep -q '"ok":true'
 
-            CONTENT_JSON=$(curl -fsS https://rogernortconsult.com/api/content)
+            if ! CONTENT_JSON=$(curl -fsS https://rogernortconsult.com/api/content); then
+              echo "Public content smoke test failed; safe schema diagnostics follow:"
+              docker compose -f /opt/rogernort/supabase/docker-compose.yml exec -T \
+                -e PGPASSWORD="$DB_PASSWORD" db \
+                psql -At -U "$SCHEMA_OWNER" -d postgres -c \
+                "select table_schema || '.' || table_name || ':' || string_agg(column_name, ',' order by ordinal_position) from information_schema.columns where table_schema = 'rogernort' and table_name in ('destinations', 'testimonials') group by table_schema, table_name order by table_name;"
+              docker compose -f /opt/rogernort/supabase/docker-compose.yml exec -T \
+                -e PGPASSWORD="$DB_PASSWORD" db \
+                psql -At -U "$SCHEMA_OWNER" -d postgres -c \
+                "select table_name || ':service_role_select=' || has_table_privilege('service_role', quote_ident(table_schema) || '.' || quote_ident(table_name), 'select') from information_schema.tables where table_schema = 'rogernort' and table_name in ('destinations', 'testimonials') order by table_name;"
+              exit 1
+            fi
             echo "$CONTENT_JSON" | grep -q '"ok":true'
 
             CHAT_JSON=$(curl -fsS -X POST https://rogernortconsult.com/api/agent/chat \
