@@ -95,9 +95,12 @@ jobs:
 
             # Install origin-level response headers and validate Nginx before reload.
             NGINX_CONTAINER=""
+            EXPECTED_INDEX_SHA=$(sha256sum "$REPO_DIR/index.html" | awk '{print $1}')
             for CONTAINER_ID in $(docker ps --filter status=running --format '{{.ID}} {{.Image}}' \
               | awk 'tolower($2) ~ /nginx/ {print $1}'); do
-              if docker exec "$CONTAINER_ID" test -f /usr/share/nginx/html/index.html \
+              ACTUAL_INDEX_SHA=$(docker exec "$CONTAINER_ID" \
+                sha256sum /usr/share/nginx/html/index.html 2>/dev/null | awk '{print $1}' || true)
+              if [ "$ACTUAL_INDEX_SHA" = "$EXPECTED_INDEX_SHA" ] \
                 && docker exec "$CONTAINER_ID" nginx -t >/dev/null 2>&1; then
                 NGINX_CONTAINER="$CONTAINER_ID"
                 break
@@ -122,22 +125,25 @@ jobs:
             fi
             case "$NGINX_CONF_SOURCE" in
               /opt/rogernort/*) ;;
-              *)
-                echo "Refusing to edit unexpected Nginx path: $NGINX_CONF_SOURCE"
-                echo "Sanitized Nginx structure for scope verification:"
-                docker exec "$NGINX_CONTAINER" nginx -T 2>&1 \
-                  | grep -E '^[[:space:]]*(# configuration file|server_name|root|location|proxy_pass)' \
-                  || true
-                exit 1
+              /opt/kindnesshcs/nginx.conf)
+                # This legacy-named mount was verified to be the single-server
+                # config whose document root contains the exact deployed page.
+                if [ "$(grep -Ec '^[[:space:]]*server[[:space:]]*\{' "$NGINX_CONF_SOURCE")" -ne 1 ] \
+                  || ! grep -Eq '^[[:space:]]*root[[:space:]]+/usr/share/nginx/html;' "$NGINX_CONF_SOURCE"; then
+                  echo "Legacy Nginx mount no longer has the verified Rogernort structure."
+                  exit 1
+                fi
                 ;;
+              *) echo "Refusing to edit unexpected Nginx path: $NGINX_CONF_SOURCE"; exit 1 ;;
             esac
             if [ ! -f "$NGINX_CONF_SOURCE" ]; then
               echo "Static-site Nginx configuration was not found."
               exit 1
             fi
-            if ! grep -q "include /etc/nginx/security-headers.inc;" "$NGINX_CONF_SOURCE"; then
+            if ! grep -q "BEGIN ROGERNORT MANAGED SECURITY HEADERS" "$NGINX_CONF_SOURCE"; then
               cp "$NGINX_CONF_SOURCE" "$NGINX_CONF_SOURCE.pre-rogernort-security"
-              sed "/^[[:space:]]*location[[:space:]].*{[[:space:]]*$/a\\        include /etc/nginx/security-headers.inc;" \
+              sed -e '/include \/etc\/nginx\/security-headers\.inc;/d' \
+                -e "/^[[:space:]]*location[[:space:]].*{[[:space:]]*$/r $REPO_DIR/deploy/nginx-security-headers.inc" \
                 "$NGINX_CONF_SOURCE" > /tmp/rogernort-nginx.conf
               cat /tmp/rogernort-nginx.conf > "$NGINX_CONF_SOURCE"
               rm /tmp/rogernort-nginx.conf
