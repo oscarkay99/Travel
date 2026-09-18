@@ -108,6 +108,15 @@ jobs:
             done
             if [ -z "$NGINX_CONTAINER" ]; then
               echo "Nginx container was not found; refusing deployment without security headers."
+              echo "Expected homepage SHA-256: $EXPECTED_INDEX_SHA"
+              for CONTAINER_ID in $(docker ps --filter status=running --format '{{.ID}} {{.Image}}' \
+                | awk 'tolower($2) ~ /nginx/ {print $1}'); do
+                docker inspect --format \
+                  'Candidate={{.Name}} image={{.Config.Image}}{{range .Mounts}} mount={{.Source}}:{{.Destination}}{{end}}' \
+                  "$CONTAINER_ID"
+                docker exec "$CONTAINER_ID" \
+                  sha256sum /usr/share/nginx/html/index.html 2>/dev/null || true
+              done
               exit 1
             fi
             docker cp "$REPO_DIR/deploy/nginx-security-headers.conf" \
