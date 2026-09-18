@@ -131,6 +131,18 @@ function validateEnquiry(data) {
   };
 }
 
+function validateAgentLead(data) {
+  exactKeys(data, ['name', 'phone', 'interest', 'website', 'formStartedAt', 'turnstileToken'], ['name', 'phone']);
+  const bot = antiBotFields(data);
+  return {
+    ...bot,
+    name: name(data.name, 'Name'),
+    phone: phone(data.phone),
+    interest: cleanString(data.interest, 'Interest', { max: 120 }),
+    turnstileToken: cleanString(data.turnstileToken, 'Verification token', { max: 2_048 })
+  };
+}
+
 function validateApplication(data) {
   exactKeys(data, [
     'fname', 'lname', 'phone', 'age', 'email', 'country', 'passport', 'skills', 'note',
@@ -238,6 +250,7 @@ module.exports = {
   assertPlainObject,
   validateEnquiry,
   validateApplication,
+  validateAgentLead,
   validateChat,
   htmlEscape,
   safeHeaderText,

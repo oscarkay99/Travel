@@ -1027,6 +1027,27 @@
       border-radius: 10px; color: #fff; background: #25D366;
       font-size: .72rem; font-weight: 700; text-decoration: none;
     }
+    .agent-lead-card {
+      margin: -4px 17px 11px; padding: 14px;
+      border-radius: 14px; background: #fff; border: 1px solid rgba(201,162,75,.4);
+    }
+    .agent-lead-intro { font-size: .76rem; color: var(--ink-2); line-height: 1.5; margin: 0 0 10px; }
+    .agent-lead-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .agent-lead-input {
+      flex: 1; min-width: 0; height: 40px; outline: none;
+      border: 1px solid #dfe3eb; border-radius: 10px; padding: 0 11px;
+      color: var(--ink); background: #f8f9fb; font: 500 .78rem/1 'Hanken Grotesk', sans-serif;
+    }
+    .agent-lead-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,162,75,.1); }
+    .agent-lead-submit {
+      width: 100%; height: 40px; margin-top: 2px; border: 0; border-radius: 10px;
+      background: var(--gold); color: #fff; cursor: pointer;
+      font: 700 .78rem/1 'Hanken Grotesk', sans-serif; transition: opacity .2s;
+    }
+    .agent-lead-submit:disabled { opacity: .5; cursor: wait; }
+    .agent-lead-status { font-size: .7rem; color: var(--ink-3); margin: 8px 0 0; text-align: center; }
+    .agent-lead-status.success { color: #1a8a4a; font-weight: 700; }
+    .agent-lead-status.error { color: #c0392b; }
     .agent-compose { padding: 12px 14px 8px; background: #fff; border-top: 1px solid #e8ebf1; }
     .agent-form { display: flex; align-items: flex-end; gap: 8px; }
     .agent-input {
@@ -1819,6 +1840,22 @@
       <button class="agent-chip" type="button">Office location</button>
     </div>
     <div id="agentHandoff"></div>
+    <div class="agent-lead-card" id="agentLeadCard" hidden>
+      <p class="agent-lead-intro">Leave your name and number below and someone from our team will personally reach out, usually within the hour.</p>
+      <div class="agent-lead-row">
+        <label class="sr" for="agentLeadName">Your name</label>
+        <input type="text" id="agentLeadName" class="agent-lead-input" placeholder="Your name" autocomplete="name" maxlength="80" />
+        <label class="sr" for="agentLeadPhone">Phone number</label>
+        <input type="tel" id="agentLeadPhone" class="agent-lead-input" placeholder="Phone number" autocomplete="tel" maxlength="32" />
+      </div>
+      <div class="security-hp" aria-hidden="true">
+        <label for="agentLeadWebsite">Leave this field empty</label>
+        <input type="text" id="agentLeadWebsite" name="website" tabindex="-1" autocomplete="off" />
+      </div>
+      <div class="turnstile-slot" data-turnstile-for="agent_lead"></div>
+      <button type="button" class="agent-lead-submit" id="agentLeadSubmit">Request a callback</button>
+      <p class="agent-lead-status" id="agentLeadStatus" aria-live="polite"></p>
+    </div>
     <div class="agent-compose">
       <form class="agent-form" id="agentForm">
         <label class="sr" for="agentInput">Ask the Rogernort adviser</label>
@@ -1850,6 +1887,7 @@
     const formSecurity = {
       applicationStartedAt: Date.now(),
       enquiryStartedAt: Date.now(),
+      agentLeadStartedAt: Date.now(),
       widgets: Object.create(null)
     };
 
@@ -2337,15 +2375,83 @@
       }
 
       function showHandoff() {
-        if (handoff.firstChild) return;
-        const link = document.createElement('a');
-        link.className = 'agent-handoff';
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.href = 'https://wa.me/233559499248?text=Hello%20Rogernort%2C%20I%20was%20speaking%20with%20your%20digital%20adviser%20and%20would%20like%20human%20assistance.';
-        link.textContent = 'Continue with an adviser on WhatsApp →';
-        handoff.appendChild(link);
+        if (!handoff.firstChild) {
+          const link = document.createElement('a');
+          link.className = 'agent-handoff';
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.href = 'https://wa.me/233559499248?text=Hello%20Rogernort%2C%20I%20was%20speaking%20with%20your%20digital%20adviser%20and%20would%20like%20human%20assistance.';
+          link.textContent = 'Continue with an adviser on WhatsApp →';
+          handoff.appendChild(link);
+        }
+        showLeadCard();
       }
+
+      function leadInterest() {
+        const lastUser = [...history].reverse().find((item) => item.role === 'user');
+        return lastUser ? lastUser.content.slice(0, 120) : 'AI Concierge chat';
+      }
+
+      function showLeadCard() {
+        const card = document.getElementById('agentLeadCard');
+        if (!card || !card.hidden) return;
+        card.hidden = false;
+        formSecurity.agentLeadStartedAt = Date.now();
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      function setupLeadCard() {
+        const card = document.getElementById('agentLeadCard');
+        const submit = document.getElementById('agentLeadSubmit');
+        const status = document.getElementById('agentLeadStatus');
+        const nameField = document.getElementById('agentLeadName');
+        const phoneField = document.getElementById('agentLeadPhone');
+        const website = document.getElementById('agentLeadWebsite');
+        if (!card || !submit) return;
+
+        submit.addEventListener('click', async () => {
+          const leadName = nameField.value.trim();
+          const leadPhone = phoneField.value.trim();
+          status.className = 'agent-lead-status';
+          if (!leadName || !leadPhone) {
+            status.textContent = 'Please add your name and a phone number.';
+            status.classList.add('error');
+            return;
+          }
+          submit.disabled = true;
+          status.textContent = 'Sending…';
+          try {
+            const response = await fetch('/api/agent/lead', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: leadName,
+                phone: leadPhone,
+                interest: leadInterest(),
+                website: website.value,
+                formStartedAt: formSecurity.agentLeadStartedAt,
+                turnstileToken: turnstileToken('agent_lead')
+              })
+            });
+            const data = await response.json();
+            if (!response.ok || !data.ok) throw new Error(data.error || 'Please try again.');
+            status.textContent = 'Thank you, someone from our team will call you shortly.';
+            status.classList.add('success');
+            nameField.disabled = true;
+            phoneField.disabled = true;
+            submit.remove();
+          } catch (error) {
+            status.textContent = error.message || 'Something went wrong, please try WhatsApp instead.';
+            status.classList.add('error');
+            submit.disabled = false;
+          } finally {
+            if (window.turnstile && formSecurity.widgets.agent_lead !== undefined) {
+              window.turnstile.reset(formSecurity.widgets.agent_lead);
+            }
+          }
+        });
+      }
+      setupLeadCard();
 
       async function askAgent(question) {
         const text = question.trim();

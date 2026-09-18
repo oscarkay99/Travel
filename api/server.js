@@ -6,7 +6,7 @@ const crypto = require('crypto');
 const { answerUser } = require('./ai/agent');
 const {
   HttpError, allowedOrigin, enforceOrigin, clientIp, subjectHash,
-  assertPlainObject, validateEnquiry, validateApplication, validateChat,
+  assertPlainObject, validateEnquiry, validateApplication, validateAgentLead, validateChat,
   htmlEscape, safeHeaderText, verifyTurnstile
 } = require('./security');
 
@@ -21,7 +21,7 @@ const localRateLimits = new Map();
 
 const ROUTES = new Set([
   '/api/agent/status', '/api/public-config', '/api/content',
-  '/api/agent/chat', '/api/enquire', '/api/apply'
+  '/api/agent/chat', '/api/agent/lead', '/api/enquire', '/api/apply'
 ]);
 
 const RATE_RULES = {
@@ -31,6 +31,8 @@ const RATE_RULES = {
   enquiry_day: { limit: 30, windowSeconds: 86_400 },
   application_hour: { limit: 5, windowSeconds: 3_600 },
   application_day: { limit: 10, windowSeconds: 86_400 },
+  agent_lead_hour: { limit: 10, windowSeconds: 3_600 },
+  agent_lead_day: { limit: 30, windowSeconds: 86_400 },
   content_minute: { limit: 60, windowSeconds: 60 }
 };
 
@@ -146,7 +148,7 @@ function supaRequest(method, route, body, { prefer = 'return=minimal', timeoutMs
 }
 
 function supaInsert(table, data) {
-  if (!['agent_conversations', 'enquiries', 'applications'].includes(table)) {
+  if (!['agent_conversations', 'enquiries', 'applications', 'leads'].includes(table)) {
     return Promise.reject(new Error('Database table is not allowed.'));
   }
   return supaRequest('POST', `/rest/v1/${table}`, data);
@@ -275,6 +277,57 @@ function sendApplicationEmail(application) {
   });
 }
 
+function sendLeadEmail(lead) {
+  if (!RESEND_KEY) return Promise.reject(new Error('Email delivery is not configured.'));
+  const safe = {
+    name: htmlEscape(lead.name || ''),
+    phone: htmlEscape(lead.phone || ''),
+    interest: htmlEscape(lead.interest || 'AI Concierge chat')
+  };
+  const whatsappNumber = lead.phone.replace(/\D/g, '').replace(/^0/, '233');
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#f4f6fb;padding:32px;">
+      <div style="background:#142449;border-radius:12px;padding:28px 32px;margin-bottom:24px;">
+        <h1 style="color:#fff;margin:0;font-size:22px;">New Lead: AI Concierge</h1>
+        <p style="color:#c9a24b;margin:6px 0 0;font-size:14px;">Captured from rogernortconsult.com chat</p>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:28px 32px;border:1px solid #e5decb;">
+        <table style="width:100%;border-collapse:collapse;">
+          <tr><td>Name</td><td><strong>${safe.name}</strong></td></tr>
+          <tr><td>Phone</td><td><strong>${safe.phone}</strong></td></tr>
+          <tr><td>Interest</td><td><strong>${safe.interest}</strong></td></tr>
+        </table>
+      </div>
+      <p><a href="https://wa.me/${whatsappNumber}">Reply on WhatsApp</a></p>
+      <p>Rogernort Travel &amp; Tour, The Base, New Legon, Adenta</p>
+    </div>`;
+  const payload = JSON.stringify({
+    from: 'Rogernort Concierge <onboarding@resend.dev>',
+    to: [TO_EMAIL],
+    subject: safeHeaderText(`New concierge lead: ${lead.name}`),
+    html
+  });
+  return new Promise((resolve, reject) => {
+    const request = https.request({
+      hostname: 'api.resend.com', path: '/emails', method: 'POST',
+      headers: {
+        Authorization: `Bearer ${RESEND_KEY}`,
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    }, (response) => {
+      response.resume();
+      response.on('end', () => {
+        if (response.statusCode >= 200 && response.statusCode < 300) resolve();
+        else reject(new Error(`Email provider returned HTTP ${response.statusCode}.`));
+      });
+    });
+    request.setTimeout(8_000, () => request.destroy(new Error('Email provider timed out.')));
+    request.on('error', reject);
+    request.end(payload);
+  });
+}
+
 async function getPublicContent() {
   const [destinations, testimonials] = await Promise.all([
     supaRequest('GET', '/rest/v1/destinations?select=name,region,image_url,price_from,badge&active=eq.true&order=sort_order.asc&limit=6', undefined, { prefer: null }),
@@ -337,6 +390,39 @@ async function handleRequest(req, res) {
         handoffRecommended: answer.handoffRecommended,
         privacyNotice: answer.redactions.length ? 'Sensitive information was removed before processing.' : undefined
       });
+    }
+
+    if (path === '/api/agent/lead') {
+      await enforceRateLimits(req, ['agent_lead_hour', 'agent_lead_day'], requestId);
+      const lead = validateAgentLead(data);
+      if (lead.bot) {
+        securityEvent('honeypot_triggered', { requestId, endpoint: path });
+        return sendJson(res, 200, { ok: true });
+      }
+      await verifyTurnstile(lead.turnstileToken, remoteIp);
+      const fingerprint = submissionFingerprint('agent_lead', '', lead.phone);
+      if (!(await registerSubmission('agent_lead', fingerprint))) {
+        securityEvent('duplicate_submission', { requestId, endpoint: path });
+        return sendJson(res, 200, { ok: true });
+      }
+      try {
+        await supaInsert('leads', {
+          id: crypto.randomUUID(),
+          name: lead.name,
+          phone: lead.phone,
+          interest: lead.interest || 'AI Concierge chat',
+          source: 'website',
+          status: 'hot',
+          notes: 'Captured via AI Concierge chat on rogernortconsult.com',
+          created_at: new Date().toISOString().slice(0, 10)
+        });
+      } catch (error) {
+        await supaRpc('security_forget_submission', { p_kind: 'agent_lead', p_fingerprint: fingerprint }).catch(() => {});
+        throw error;
+      }
+      try { await sendLeadEmail(lead); }
+      catch (_) { securityEvent('lead_email_failed', { requestId }); }
+      return sendJson(res, 200, { ok: true });
     }
 
     if (path === '/api/enquire') {
