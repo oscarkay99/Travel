@@ -117,6 +117,20 @@ jobs:
                 docker exec "$CONTAINER_ID" \
                   sha256sum /usr/share/nginx/html/index.html 2>/dev/null || true
               done
+              echo "Running container mounts scoped to /opt/rogernort:"
+              for CONTAINER_ID in $(docker ps --filter status=running --format '{{.ID}}'); do
+                docker inspect --format \
+                  'Candidate={{.Name}} image={{.Config.Image}}{{range .Mounts}} mount={{.Source}}:{{.Destination}}{{end}}' \
+                  "$CONTAINER_ID"
+              done | grep '/opt/rogernort' || true
+              if command -v nginx >/dev/null 2>&1; then
+                echo "Host Nginx structure:"
+                nginx -T 2>&1 \
+                  | grep -E '^[[:space:]]*(# configuration file|server_name|root|location|proxy_pass)' \
+                  || true
+              else
+                echo "No host Nginx binary found."
+              fi
               exit 1
             fi
             docker cp "$REPO_DIR/deploy/nginx-security-headers.conf" \
