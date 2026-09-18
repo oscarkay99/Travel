@@ -149,6 +149,11 @@ jobs:
 
             if ! CONTENT_JSON=$(curl -fsS https://rogernortconsult.com/api/content); then
               echo "Public content smoke test failed; safe schema diagnostics follow:"
+              docker inspect --format \
+                '{{.Name}} networks={{range $name, $network := .NetworkSettings.Networks}}{{$name}} {{end}}' \
+                rogernort-api rogernort-kong
+              docker exec rogernort-api node -e \
+                "const url=process.env.SUPA_URL+'/rest/v1/destinations?select=id&limit=0'; fetch(url,{headers:{apikey:process.env.SUPA_SERVICE_KEY,Authorization:'Bearer '+process.env.SUPA_SERVICE_KEY,'Accept-Profile':'rogernort'}}).then(r=>console.log('In-container PostgREST HTTP='+r.status)).catch(e=>console.log('In-container PostgREST error='+(e.cause?.code||e.code||'request_failed')))"
               for CONTENT_ROUTE in \
                 'destinations?select=name,region,image_url,price_from,badge&active=eq.true&order=sort_order.asc&limit=0' \
                 'testimonials?select=name,destination,rating,content&active=eq.true&order=sort_order.asc&limit=0'; do
