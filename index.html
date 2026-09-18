@@ -2392,9 +2392,11 @@
         return lastUser ? lastUser.content.slice(0, 120) : 'AI Concierge chat';
       }
 
+      let leadCaptured = false;
+
       function showLeadCard() {
         const card = document.getElementById('agentLeadCard');
-        if (!card || !card.hidden) return;
+        if (!card || !card.hidden || leadCaptured) return;
         card.hidden = false;
         formSecurity.agentLeadStartedAt = Date.now();
         messages.scrollTop = messages.scrollHeight;
@@ -2435,11 +2437,11 @@
             });
             const data = await response.json();
             if (!response.ok || !data.ok) throw new Error(data.error || 'Please try again.');
-            status.textContent = 'Thank you, someone from our team will call you shortly.';
-            status.classList.add('success');
-            nameField.disabled = true;
-            phoneField.disabled = true;
-            submit.remove();
+            leadCaptured = true;
+            card.hidden = true;
+            nameField.value = '';
+            phoneField.value = '';
+            addMessage('assistant', `Thank you, ${leadName.split(' ')[0]}! Someone from our team will call you shortly.`);
           } catch (error) {
             status.textContent = error.message || 'Something went wrong, please try WhatsApp instead.';
             status.classList.add('error');
