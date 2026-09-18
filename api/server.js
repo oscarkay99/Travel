@@ -400,8 +400,12 @@ async function handleRequest(req, res) {
         return sendJson(res, 200, { ok: true });
       }
       await verifyTurnstile(lead.turnstileToken, remoteIp);
-      const fingerprint = submissionFingerprint('agent_lead', '', lead.phone);
-      if (!(await registerSubmission('agent_lead', fingerprint))) {
+      // The security_register_submission/security_forget_submission DB functions only
+      // accept kind IN ('application', 'enquiry'). Reuse 'enquiry': the fingerprint hash
+      // includes an empty email component here, so it never collides with a real
+      // /api/enquire submission's fingerprint (which always has a real, non-empty email).
+      const fingerprint = submissionFingerprint('enquiry', '', lead.phone);
+      if (!(await registerSubmission('enquiry', fingerprint))) {
         securityEvent('duplicate_submission', { requestId, endpoint: path });
         return sendJson(res, 200, { ok: true });
       }
@@ -417,7 +421,7 @@ async function handleRequest(req, res) {
           created_at: new Date().toISOString().slice(0, 10)
         });
       } catch (error) {
-        await supaRpc('security_forget_submission', { p_kind: 'agent_lead', p_fingerprint: fingerprint }).catch(() => {});
+        await supaRpc('security_forget_submission', { p_kind: 'enquiry', p_fingerprint: fingerprint }).catch(() => {});
         throw error;
       }
       try { await sendLeadEmail(lead); }
