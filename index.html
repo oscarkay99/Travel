@@ -945,7 +945,7 @@
       border: 2px solid rgba(201,162,75,.78);
       box-shadow: 0 5px 18px rgba(201,162,75,.38), 0 0 0 3px rgba(255,255,255,.08);
     }
-    .agent-brand-mark { width: 62px; height: 62px; max-width: none; object-fit: contain; transform: translateY(7px); }
+    .agent-icon-mark { width: 24px; height: 24px; display: block; }
     .agent-launcher-dot {
       position: absolute; top: 7px; left: 37px; width: 9px; height: 9px;
       border-radius: 50%; background: #43d17d; border: 2px solid #1c3669;
@@ -971,7 +971,7 @@
       display: grid; place-items: center; overflow: hidden; background: #fff;
       border: 1px solid rgba(255,255,255,.62); box-shadow: 0 7px 20px rgba(0,0,0,.16);
     }
-    .agent-avatar .agent-brand-mark { width: 70px; height: 70px; transform: translateY(8px); }
+    .agent-avatar .agent-icon-mark { width: 27px; height: 27px; }
     .agent-head-copy { min-width: 0; flex: 1; }
     .agent-head-copy strong { display: block; font-family: 'Fraunces', serif; font-size: 1.05rem; }
     .agent-status { display: flex; align-items: center; gap: 6px; margin-top: 4px; color: rgba(255,255,255,.63); font-size: .69rem; }
@@ -1581,7 +1581,7 @@
             </div>
             <div class="af-field">
               <label for="ap-skills">Your Occupation / Work Experience</label>
-              <input type="text" id="ap-skills" placeholder="Optional — unskilled roles are available" />
+              <input type="text" id="ap-skills" placeholder="Optional, unskilled roles are available" />
             </div>
             <div class="af-field">
               <label for="ap-note">Anything else we should know?</label>
@@ -1781,7 +1781,14 @@
   <!-- ══ FLOATING WHATSAPP ══ -->
   <button class="agent-launcher" id="agentLauncher" type="button" aria-expanded="false" aria-controls="agentPanel">
     <span class="agent-launcher-icon" aria-hidden="true">
-      <img class="agent-brand-mark" src="photos/e9645b58-be3c-4974-8a03-0b34352a88e8.png" alt="" />
+      <svg class="agent-icon-mark" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="24" cy="24" r="20.5" stroke="#142449" stroke-width="1.4" />
+        <circle cx="24" cy="24" r="20.5" stroke="#c9a24b" stroke-width="1" stroke-dasharray="0.5 3.6" />
+        <path d="M24 6v4.5M24 37.5V42M6 24h4.5M37.5 24H42" stroke="#142449" stroke-width="1.2" stroke-linecap="round" />
+        <path d="M24 11L27.2 24L24 37L20.8 24Z" fill="#142449" />
+        <path d="M11 24L24 20.8L37 24L24 27.2Z" fill="#c9a24b" />
+        <circle cx="24" cy="24" r="2.6" fill="#c9a24b" stroke="#142449" stroke-width="0.9" />
+      </svg>
     </span>
     <span>Travel Concierge</span>
     <span class="agent-launcher-dot" aria-hidden="true"></span>
@@ -1790,7 +1797,14 @@
   <section class="agent-panel" id="agentPanel" role="dialog" aria-modal="false" aria-label="Rogernort digital travel adviser" aria-hidden="true">
     <header class="agent-head">
       <div class="agent-avatar" aria-hidden="true">
-        <img class="agent-brand-mark" src="photos/e9645b58-be3c-4974-8a03-0b34352a88e8.png" alt="" />
+        <svg class="agent-icon-mark" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="24" r="20.5" stroke="#142449" stroke-width="1.4" />
+          <circle cx="24" cy="24" r="20.5" stroke="#c9a24b" stroke-width="1" stroke-dasharray="0.5 3.6" />
+          <path d="M24 6v4.5M24 37.5V42M6 24h4.5M37.5 24H42" stroke="#142449" stroke-width="1.2" stroke-linecap="round" />
+          <path d="M24 11L27.2 24L24 37L20.8 24Z" fill="#142449" />
+          <path d="M11 24L24 20.8L37 24L24 27.2Z" fill="#c9a24b" />
+          <circle cx="24" cy="24" r="2.6" fill="#c9a24b" stroke="#142449" stroke-width="0.9" />
+        </svg>
       </div>
       <div class="agent-head-copy">
         <strong>Rogernort Concierge</strong>
@@ -2309,7 +2323,7 @@
         panel.setAttribute('aria-hidden', 'false');
         launcher.setAttribute('aria-expanded', 'true');
         if (!greeted) {
-          addMessage('assistant', '**Akwaaba—welcome to Rogernort!**\n\nI’m your digital travel concierge. I can help with holiday packages, the Czech Republic work programme, application requirements or arranging a free consultation.\n\nWhat would you like to explore?');
+          addMessage('assistant', '**Akwaaba, welcome to Rogernort!**\n\nI’m your digital travel concierge. I can help with holiday packages, the Czech Republic work programme, application requirements or arranging a free consultation.\n\nWhat would you like to explore?');
           greeted = true;
         }
         setTimeout(() => input.focus(), 220);

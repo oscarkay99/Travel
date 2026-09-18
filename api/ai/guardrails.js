@@ -59,7 +59,7 @@ function confirmedBusinessAnswer(message) {
 
   if (/\b(gcb)\b/.test(text) && /\b(belong|belongs|owned|owner|official)\b/.test(text) &&
       !/\b(account number|details|pay|payment instruction|send money)\b/.test(text)) {
-    return '**Yes—the official GCB account belongs directly to Rogernort.**\n\nFor your security, please obtain and verify the exact account number and payment reference with an authorised adviser before sending money.';
+    return '**Yes, the official GCB account belongs directly to Rogernort.**\n\nFor your security, please obtain and verify the exact account number and payment reference with an authorised adviser before sending money.';
   }
 
   if (/\b(country|countries|opportunity|programme|program)\b/.test(text) &&

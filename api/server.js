@@ -251,7 +251,7 @@ function sendApplicationEmail(application) {
   const payload = JSON.stringify({
     from: 'Rogernort Applications <onboarding@resend.dev>',
     to: [TO_EMAIL],
-    subject: safeHeaderText(`New Work Abroad Application — ${application.fname} ${application.lname} (${application.country})`),
+    subject: safeHeaderText(`New Work Abroad Application: ${application.fname} ${application.lname} (${application.country})`),
     html
   });
   return new Promise((resolve, reject) => {
