@@ -23,3 +23,4 @@ jobs:
         run: |
           node --test api/ai/agent.test.js api/security.test.js
           node --check api/server.js
+          sh -n deploy/configure-aop.sh
