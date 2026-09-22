@@ -4,6 +4,13 @@ const { spawnSync } = require('node:child_process');
 const path = require('node:path');
 
 const fixture = `server {
+    listen 80;
+    server_name rogernortconsult.com www.rogernortconsult.com;
+    location / {
+        return 301 https://rogernortconsult.com$request_uri;
+    }
+}
+server {
     listen 443 ssl;
     server_name rogernortconsult.com;
     root /opt/rogernort/nginx/html;
@@ -40,7 +47,7 @@ test('replaces the homepage fallback, preserves other config, and is idempotent'
 test('refuses unfamiliar or ambiguous routing before installation', () => {
   for (const input of [
     fixture.replace('try_files $uri $uri/ /index.html;', 'try_files $uri @app;'),
-    fixture.replace('location / {', 'location /other/ {'),
+    fixture.replaceAll('location / {', 'location /other/ {'),
     fixture + fixture,
     fixture.replace('        try_files', '        location /nested/ {\n        }\n        try_files'),
   ]) {

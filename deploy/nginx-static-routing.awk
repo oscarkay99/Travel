@@ -1,8 +1,10 @@
 # Only change the static site's root location. Leave API, TLS, headers and
 # hostname redirects alone. Refuse unfamiliar layouts instead of guessing.
+/^[[:space:]]*server[[:space:]]*\{[[:space:]]*$/ { static_server = 0 }
+/^[[:space:]]*root[[:space:]]+\/opt\/rogernort\/nginx\/html;[[:space:]]*$/ { static_server = 1 }
 /^[[:space:]]*location[[:space:]]+\/[[:space:]]*\{[[:space:]]*$/ {
-    in_root = 1
-    roots++
+    in_root = static_server
+    if (in_root) roots++
     print
     next
 }
