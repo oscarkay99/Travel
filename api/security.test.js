@@ -98,6 +98,11 @@ test('browser scripts are syntactically valid and covered by the deployed CSP ha
   const nginx = fs.readFileSync(path.join(root, 'deploy/nginx-security-headers.inc'), 'utf8');
   const scripts = [...html.matchAll(/<script(?:\s+type="application\/ld\+json")?>([\s\S]*?)<\/script>/g)];
   assert.equal(scripts.length, 3);
+  const dubai = fs.readFileSync(path.join(root, 'dubai-holiday-packages-from-accra.html'), 'utf8');
+  const packageScripts = [...dubai.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
+  assert.equal(packageScripts.length, 1);
+  assert.doesNotThrow(() => JSON.parse(packageScripts[0][1]));
+  scripts.push(...packageScripts);
   assert.doesNotThrow(() => new Function(scripts[0][1]));
   assert.doesNotThrow(() => JSON.parse(scripts[1][1]));
   assert.doesNotThrow(() => JSON.parse(scripts[2][1]));

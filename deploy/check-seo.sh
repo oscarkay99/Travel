@@ -14,7 +14,7 @@ check_status() {
   echo "OK $url: HTTP $actual"
 }
 
-for path in / /privacy-policy.html /terms.html /robots.txt /sitemap.xml; do
+for path in / /dubai-holiday-packages-from-accra.html /privacy-policy.html /terms.html /robots.txt /sitemap.xml; do
   check_status 200 "$origin$path"
 done
 
