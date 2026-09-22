@@ -79,10 +79,11 @@ jobs:
 
             # Refuse deployment when the agent or browser scripts fail validation
             docker run --rm -v "$REPO_DIR:/work:ro" -w /work node:24-alpine3.23@sha256:838d276a37a1e42da2a5d01e0ecbb4401ca4147728f62ca2eba6d023a352f88f \
-              node --test api/ai/agent.test.js api/security.test.js
+              node --test api/ai/agent.test.js api/security.test.js deploy/seo.test.js
             docker run --rm -v "$REPO_DIR:/work:ro" -w /work node:24-alpine3.23@sha256:838d276a37a1e42da2a5d01e0ecbb4401ca4147728f62ca2eba6d023a352f88f \
               node --check api/server.js
             sh -n "$REPO_DIR/deploy/configure-aop.sh"
+            sh -n "$REPO_DIR/deploy/check-seo.sh"
 
             # Deploy static files
             cp "$REPO_DIR/index.html" /opt/rogernort/nginx/html/
@@ -173,8 +174,12 @@ jobs:
                 }
               }
             ' "$NGINX_CONF" > /tmp/rogernort-nginx.conf
-            cat /tmp/rogernort-nginx.conf > "$NGINX_CONF"
-            rm /tmp/rogernort-nginx.conf
+            # This is a static site: unknown paths must return 404, not the
+            # homepage with 200. Validate the layout before installing changes.
+            awk -f "$REPO_DIR/deploy/nginx-static-routing.awk" \
+              /tmp/rogernort-nginx.conf > /tmp/rogernort-nginx-seo.conf
+            cat /tmp/rogernort-nginx-seo.conf > "$NGINX_CONF"
+            rm /tmp/rogernort-nginx.conf /tmp/rogernort-nginx-seo.conf
             if ! nginx -t; then
               cat "$NGINX_BACKUP" > "$NGINX_CONF"
               nginx -t
@@ -248,6 +253,11 @@ jobs:
             --data '{"purge_everything":true}' \
             -o /dev/null -w "Cloudflare purge status: %{http_code}\n" \
             --fail-with-body
+
+      - uses: actions/checkout@v4
+
+      - name: Verify public indexing routes after cache purge
+        run: sh deploy/check-seo.sh
 
       - name: Check Cloudflare security capabilities
         env:
