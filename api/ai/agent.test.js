@@ -39,7 +39,7 @@ test('grounds normal questions in the public knowledge allowlist', async () => {
       status: 200,
       headers: { get: () => null },
       json: async () => ({
-        candidates: [{ content: { parts: [{ text: 'The office is at The Base, New Legon, Adenta.' }] } }]
+        candidates: [{ content: { parts: [{ text: 'The office is at The Base, New-Legon, Adenta.' }] } }]
       })
     };
   };
@@ -48,7 +48,7 @@ test('grounds normal questions in the public knowledge allowlist', async () => {
   const result = await answerUser({ message: 'Where is your office?' });
   const outbound = JSON.stringify(request);
 
-  assert.match(outbound, /The Base, New Legon, Adenta/);
+  assert.match(outbound, /The Base, New-Legon, Adenta/);
   assert.doesNotMatch(outbound, /Official GCB account ownership/);
   assert.equal(result.provider, 'gemini_project_1');
   assert.match(result.text, /The Base/);
