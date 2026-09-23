@@ -2,6 +2,7 @@
 
 const crypto = require('crypto');
 const https = require('https');
+const { redactSensitiveData } = require('./ai/guardrails');
 
 const PROD_ORIGINS = new Set([
   'https://rogernortconsult.com',
@@ -131,14 +132,35 @@ function validateEnquiry(data) {
   };
 }
 
+function leadContext(conversation, fallbackInterest) {
+  if (!Array.isArray(conversation) || conversation.length > 8) {
+    throw new HttpError(400, 'Conversation context is invalid.', 'INVALID_HISTORY');
+  }
+  const messages = conversation.map((message) =>
+    redactSensitiveData(cleanString(message, 'Conversation message', { max: 4_000, required: true })).text
+      .replace(/\s+/g, ' '));
+  const topics = [
+    ['Dubai holiday package', /\bdubai\b/i],
+    ['Work abroad assistance', /\b(czech|work abroad|factory|warehouse)\b/i],
+    ['Visa assistance', /\bvisa\b/i],
+    ['Flight booking', /\b(flight|flights|airfare)\b/i],
+    ['Hotel booking', /\b(hotel|hotels|accommodation)\b/i]
+  ].filter(([, pattern]) => messages.some((message) => pattern.test(message))).map(([label]) => label);
+  return {
+    interest: topics.join(', ').slice(0, 120) || redactSensitiveData(fallbackInterest).text || 'AI Concierge chat',
+    summary: messages.length ? 'Customer conversation summary (recent message excerpts):\n' +
+      messages.map((message) => '- ' + (message.length > 220 ? message.slice(0, 217) + '…' : message)).join('\n') : ''
+  };
+}
+
 function validateAgentLead(data) {
-  exactKeys(data, ['name', 'phone', 'interest', 'website', 'formStartedAt', 'turnstileToken'], ['name', 'phone']);
+  exactKeys(data, ['name', 'phone', 'interest', 'conversation', 'website', 'formStartedAt', 'turnstileToken'], ['name', 'phone']);
   const bot = antiBotFields(data);
   return {
     ...bot,
     name: name(data.name, 'Name'),
     phone: phone(data.phone),
-    interest: cleanString(data.interest, 'Interest', { max: 120 }),
+    ...leadContext(data.conversation === undefined ? [] : data.conversation, cleanString(data.interest, 'Interest', { max: 120 })),
     turnstileToken: cleanString(data.turnstileToken, 'Verification token', { max: 2_048 })
   };
 }

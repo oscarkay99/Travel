@@ -246,6 +246,7 @@ function sendApplicationEmail(application) {
           <tr><td>Experience</td><td>${safe.skills || 'Not specified'}</td></tr>
           <tr><td>Notes</td><td>${safe.note || 'None'}</td></tr>
         </table>
+        ${safe.summary ? `<p style="white-space:pre-wrap">${safe.summary}</p>` : ''}
       </div>
       <p><a href="https://wa.me/${whatsappNumber}">Reply on WhatsApp</a></p>
       <p>Rogernort Travel &amp; Tour · The Base, New Legon, Adenta</p>
@@ -282,7 +283,8 @@ function sendLeadEmail(lead) {
   const safe = {
     name: htmlEscape(lead.name || ''),
     phone: htmlEscape(lead.phone || ''),
-    interest: htmlEscape(lead.interest || 'AI Concierge chat')
+    interest: htmlEscape(lead.interest || 'AI Concierge chat'),
+    summary: htmlEscape(lead.summary || '')
   };
   const whatsappNumber = lead.phone.replace(/\D/g, '').replace(/^0/, '233');
   const html = `
@@ -297,6 +299,7 @@ function sendLeadEmail(lead) {
           <tr><td>Phone</td><td><strong>${safe.phone}</strong></td></tr>
           <tr><td>Interest</td><td><strong>${safe.interest}</strong></td></tr>
         </table>
+        ${safe.summary ? `<p style="white-space:pre-wrap">${safe.summary}</p>` : ''}
       </div>
       <p><a href="https://wa.me/${whatsappNumber}">Reply on WhatsApp</a></p>
       <p>Rogernort Travel &amp; Tour, The Base, New Legon, Adenta</p>
@@ -417,7 +420,7 @@ async function handleRequest(req, res) {
           interest: lead.interest || 'AI Concierge chat',
           source: 'website',
           status: 'hot',
-          notes: 'Captured via AI Concierge chat on rogernortconsult.com',
+          notes: ['Captured via AI Concierge chat on rogernortconsult.com', lead.summary].filter(Boolean).join('\n\n'),
           created_at: new Date().toISOString().slice(0, 10)
         });
       } catch (error) {

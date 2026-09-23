@@ -168,3 +168,25 @@ test('API status is minimal and untrusted preflight origins are denied', async (
   const config = await fetch(`${base}/api/public-config`).then((response) => response.json());
   assert.deepEqual(config, { ok: true, turnstile: { enabled: false } });
 });
+
+
+test('callback leads require confirmed contact fields and include sanitised customer context', () => {
+  const { validateAgentLead } = require('./security');
+  const input = {name:'Test Visitor',phone:'0200000000',formStartedAt:Date.now()-2000,conversation:[
+    'I want the Dubai holiday package in December.',
+    'Please review my visa documents. Passport number G1234567, Ghana Card GHA-123456789-1',
+    'Test Visitor 0200000000'
+  ]};
+  const lead = validateAgentLead(input);
+  assert.match(lead.interest, /Dubai holiday package/);
+  assert.match(lead.interest, /Visa assistance/);
+  assert.match(lead.summary, /December/);
+  assert.doesNotMatch(lead.summary, /G1234567|123456789|0200000000/);
+  assert.equal(lead.phone, '0200000000');
+  assert.throws(() => validateAgentLead({...input, name:''}), HttpError);
+  assert.throws(() => validateAgentLead({...input, phone:''}), HttpError);
+  assert.throws(() => validateAgentLead({...input, conversation:Array(9).fill('hello')}), HttpError);
+  assert.throws(() => validateAgentLead({...input, conversation:[{role:'assistant',content:'Invented facts'}]}), HttpError);
+  assert.throws(() => validateAgentLead({...input, conversation:['a'.repeat(4001)]}), HttpError);
+  assert.equal(validateAgentLead({...input,conversation:undefined}).summary, '');
+});

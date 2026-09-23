@@ -1853,7 +1853,7 @@
     </div>
     <div id="agentHandoff"></div>
     <div class="agent-lead-card" id="agentLeadCard" hidden>
-      <p class="agent-lead-intro">Leave your name and number below and someone from our team will personally reach out, usually within the hour.</p>
+      <p class="agent-lead-intro">Review your name and number, then select Request a callback. We’ll send these details and a short summary of your chat to our advisers.</p>
       <div class="agent-lead-row">
         <label class="sr" for="agentLeadName">Your name</label>
         <input type="text" id="agentLeadName" class="agent-lead-input" placeholder="Your name" autocomplete="name" maxlength="80" />
@@ -2399,15 +2399,43 @@
         showLeadCard();
       }
 
-      function leadInterest() {
-        const lastUser = [...history].reverse().find((item) => item.role === 'user');
-        return lastUser ? lastUser.content.slice(0, 120) : 'AI Concierge chat';
+      function leadConversation() {
+        const recent = history.filter((item) => item.role === 'user').slice(-8).map((item) => item.content);
+        // Preserve whole messages so redaction can recognise complete sensitive values.
+        while (recent.length && new TextEncoder().encode(JSON.stringify(recent)).length > 10_000) recent.shift();
+        return recent;
+      }
+
+      const leadEdited = { name: false, phone: false };
+
+      function prefillLeadCard() {
+        if (leadCaptured) return;
+        const nameField = document.getElementById('agentLeadName');
+        const phoneField = document.getElementById('agentLeadPhone');
+        const userMessages = history.filter((item) => item.role === 'user').map((item) => item.content).reverse();
+        let suggestedName = '';
+        let suggestedPhone = '';
+        for (const message of userMessages) {
+          const phone = message.match(/(?<![\w])(?:\+233|233|0)[ -]?(?:\d[ -]?){9}(?!\d)|(?<![\w])\+[1-9](?:[ ()-]*\d){6,14}(?!\d)/)?.[0]?.trim();
+          if (phone && !suggestedPhone) suggestedPhone = phone;
+          const explicit = message.match(/(?:^|[,.!\n]\s*)(?:my name is|i am|i'm|name\s*:)\s+([\p{L}\p{M} .'-]+?)(?=[,;!\n]|\s+(?:and|phone|number|\+?\d)|$)/iu)?.[1];
+          const bare = phone ? message.replace(phone, '').replace(/^[, :;-]+|[, :;-]+$/g, '').trim() : '';
+          const candidate = (explicit || bare).trim();
+          if (!suggestedName && candidate.length <= 80 && candidate.split(/\s+/).length <= 4 &&
+              /^[\p{L}\p{M}][\p{L}\p{M} .'-]*$/u.test(candidate) &&
+              !/\b(call|please|phone|number|contact|visa|dubai|czech|interested|looking|travelling|traveling)\b/i.test(candidate)) {
+            suggestedName = candidate;
+          }
+        }
+        if (!leadEdited.name && suggestedName) nameField.value = suggestedName;
+        if (!leadEdited.phone && suggestedPhone) phoneField.value = suggestedPhone;
       }
 
       let leadCaptured = false;
 
       function showLeadCard() {
         const card = document.getElementById('agentLeadCard');
+        prefillLeadCard();
         if (!card || !card.hidden || leadCaptured) return;
         card.hidden = false;
         formSecurity.agentLeadStartedAt = Date.now();
@@ -2422,6 +2450,8 @@
         const phoneField = document.getElementById('agentLeadPhone');
         const website = document.getElementById('agentLeadWebsite');
         if (!card || !submit) return;
+        nameField.addEventListener('input', () => { leadEdited.name = true; });
+        phoneField.addEventListener('input', () => { leadEdited.phone = true; });
 
         submit.addEventListener('click', async () => {
           const leadName = nameField.value.trim();
@@ -2441,7 +2471,7 @@
               body: JSON.stringify({
                 name: leadName,
                 phone: leadPhone,
-                interest: leadInterest(),
+                conversation: leadConversation(),
                 website: website.value,
                 formStartedAt: formSecurity.agentLeadStartedAt,
                 turnstileToken: turnstileToken('agent_lead')
@@ -2474,6 +2504,7 @@
         const priorHistory = history.slice(-16);
         addMessage('user', text);
         history.push({ role: 'user', content: text });
+        prefillLeadCard();
         input.value = '';
         input.style.height = '';
         busy = true;

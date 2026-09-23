@@ -68,9 +68,10 @@ async function answerUser({ message, history, sessionId }) {
   const lastAssistant = safeHistory.messages.filter((item) => item.role === 'assistant').at(-1)?.content || '';
   const contactProvided = redactions.some((label) => ['phone number', 'email address'].includes(label));
   const callbackRequested = /\b(call me|call back|callback|speak to (?:a |an )?(?:human|adviser|advisor)|request a callback|book (?:a |the )?(?:free )?consultation)\b/i.test(safeInput.text);
+  const quoteRequested = /\b(?:personalised|personalized|custom) (?:quote|quotation)\b|\b(?:request|want|need|like|send me|prepare) (?:a |an )?(?:quote|quotation|consultation)\b/i.test(safeInput.text);
   const acceptsCallback = /^(yes|yes please|please do|sure|okay|ok)[.! ]*$/i.test(safeInput.text) &&
     /\b(callback|call you|consultation|name and phone|name and number)\b/i.test(lastAssistant);
-  if (contactProvided || callbackRequested || acceptsCallback) {
+  if (contactProvided || callbackRequested || quoteRequested || acceptsCallback) {
     return {
       sessionId: id,
       text: 'Please complete the callback form below and select **Request a callback** to send your details to our team. A chat message alone does not submit a callback request.',

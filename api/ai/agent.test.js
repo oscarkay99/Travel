@@ -96,7 +96,7 @@ test('passport requirement words are not treated as identity numbers', () => {
 test('contact details open the callback form without pretending to save a lead', async () => {
   global.fetch = async () => { throw new Error('Contact capture must not call the model'); };
   const { answerUser } = require('./agent');
-  for (const message of ['Test Visitor 0200000000', 'Please call me', 'test@example.com']) {
+  for (const message of ['Test Visitor 0200000000', 'Please call me', 'test@example.com', 'I would like a quote for Dubai', 'I want a consultation']) {
     const result = await answerUser({ message });
     assert.equal(result.provider, 'callback_form');
     assert.equal(result.handoffRecommended, true);
