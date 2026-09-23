@@ -98,7 +98,7 @@ test('browser scripts are syntactically valid and covered by the deployed CSP ha
   const nginx = fs.readFileSync(path.join(root, 'deploy/nginx-security-headers.inc'), 'utf8');
   const scripts = [...html.matchAll(/<script(?:\s+type="application\/ld\+json")?>([\s\S]*?)<\/script>/g)];
   assert.equal(scripts.length, 3);
-  for (const filename of ['dubai-holiday-packages-from-accra.html', 'visa-assistance-accra.html']) {
+  for (const filename of ['dubai-holiday-packages-from-accra.html', 'visa-assistance-accra.html', 'czech-republic-work-abroad-ghana.html']) {
     const page = fs.readFileSync(path.join(root, filename), 'utf8');
     const pageScripts = [...page.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
     assert.equal(pageScripts.length, 1);
