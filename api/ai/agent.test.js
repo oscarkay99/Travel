@@ -49,6 +49,8 @@ test('grounds normal questions in the public knowledge allowlist', async () => {
   const outbound = JSON.stringify(request);
 
   assert.match(outbound, /The Base, New-Legon, Adenta/);
+  assert.match(outbound, /All countries/);
+  assert.match(outbound, /Appointment booking assistance/);
   assert.doesNotMatch(outbound, /Official GCB account ownership/);
   assert.equal(result.provider, 'gemini_project_1');
   assert.match(result.text, /The Base/);

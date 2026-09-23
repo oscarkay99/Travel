@@ -18,6 +18,13 @@
       "role": "Front Desk Executive"
     }
   },
+  "visa_assistance": {
+    "destinations": "All countries",
+    "services": ["Document review", "Application form assistance", "Appointment booking assistance"],
+    "confirmation_required": "Confirm requirements, service scope and fees for the destination and applicant before proceeding.",
+    "limitations": "Visa decisions rest with the relevant embassy or immigration authority. Appointment dates depend on availability. Do not guarantee approval, processing times or appointment dates.",
+    "confirmed_on": "2026-09-23"
+  },
   "holiday_packages": [
     {
       "destination": "Dubai",

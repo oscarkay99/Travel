@@ -89,6 +89,7 @@ jobs:
             cp "$REPO_DIR/index.html" /opt/rogernort/nginx/html/
             cp "$REPO_DIR/privacy-policy.html" "$REPO_DIR/terms.html" /opt/rogernort/nginx/html/
             cp "$REPO_DIR/dubai-holiday-packages-from-accra.html" /opt/rogernort/nginx/html/
+            cp "$REPO_DIR/visa-assistance-accra.html" /opt/rogernort/nginx/html/
             cp "$REPO_DIR/robots.txt" "$REPO_DIR/sitemap.xml" /opt/rogernort/nginx/html/
             cp -r "$REPO_DIR/photos/." /opt/rogernort/nginx/html/photos/
             cp "$REPO_DIR"/favicon*.png "$REPO_DIR"/favicon.ico "$REPO_DIR"/apple-touch-icon.png /opt/rogernort/nginx/html/

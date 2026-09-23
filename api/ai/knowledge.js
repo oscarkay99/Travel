@@ -31,6 +31,7 @@ function groundingContext() {
       address: knowledge.business.address,
       office_hours: knowledge.business.office_hours
     },
+    visa_assistance: knowledge.visa_assistance,
     holiday_packages: knowledge.holiday_packages,
     work_programmes: knowledge.work_programmes,
     work_abroad_process: knowledge.work_abroad_process,
