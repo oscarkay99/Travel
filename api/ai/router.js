@@ -103,8 +103,13 @@ async function callGemini(provider, model, messages, options) {
     body: JSON.stringify(toGeminiRequest(messages, options, model))
   }, options.requestTimeoutMs || provider.timeoutMs);
 
-  const text = payload.candidates?.[0]?.content?.parts
-    ?.map((part) => part.text || '')
+  const candidate = payload.candidates?.[0];
+  if (candidate?.finishReason && candidate.finishReason !== 'STOP') {
+    throw new Error(`Gemini response was incomplete: ${candidate.finishReason}.`);
+  }
+  const text = candidate?.content?.parts
+    ?.filter((part) => !part.thought)
+    .map((part) => part.text || '')
     .join('')
     .trim();
 
@@ -128,7 +133,11 @@ async function callOpenAICompatible(provider, model, messages, options) {
     })
   }, provider.timeoutMs);
 
-  const content = payload.choices?.[0]?.message?.content;
+  const choice = payload.choices?.[0];
+  if (choice?.finish_reason && choice.finish_reason !== 'stop') {
+    throw new Error(`${provider.name} response was incomplete.`);
+  }
+  const content = choice?.message?.content;
   const text = Array.isArray(content)
     ? content.map((part) => part.text || '').join('').trim()
     : content?.trim();

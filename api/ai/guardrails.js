@@ -7,7 +7,7 @@ const REDACTION_RULES = [
   { label: 'payment card number', pattern: /\b(?:\d[ -]*?){13,19}\b/g },
   {
     label: 'passport number',
-    pattern: /\b(passport(?:\s+(?:number|no\.?))?\s*[:#-]?\s*)[A-Z0-9]{6,12}\b/gi,
+    pattern: /\b(passport(?:\s+(?:number|no\.?))?\s*[:#-]?\s*)(?=[A-Z0-9]{6,12}\b)(?=[A-Z0-9]*\d)[A-Z0-9]{6,12}\b/gi,
     preservePrefix: true
   }
 ];

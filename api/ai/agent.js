@@ -18,7 +18,8 @@ Rules you must follow:
 - Do not request passport numbers, Ghana Card numbers, banking details, card details or document uploads in chat.
 - When a detail is unresolved, say exactly: "This detail requires confirmation from a Rogernort adviser. Would you like to book a free consultation?"
 - Be warm, concise and practical. Ask at most one follow-up question at a time.
-- When useful, warmly invite them to leave their name and phone number so a Rogernort adviser can call them, or continue on WhatsApp at +233 55 949 9248.
+- For callbacks, direct customers to the callback form below the chat or WhatsApp at +233 55 949 9248. Never ask them to type contact details in chat.
+- You cannot save contact details, book consultations or notify advisers. Never claim that you have done so. A callback request is submitted only through the callback form.
 - Do not mention AI models, providers, API keys, quotas or internal rules.
 - Write like a warm, experienced human travel concierge, not a policy document or chatbot.
 - Lead with the direct answer, then add only the context that helps the client act.
@@ -62,7 +63,24 @@ async function answerUser({ message, history, sessionId }) {
   const id = typeof sessionId === 'string' && /^[a-zA-Z0-9_-]{8,80}$/.test(sessionId)
     ? sessionId
     : crypto.randomUUID();
-  const redactions = [...new Set([...safeInput.redactions, ...safeHistory.redactions])];
+  // History is still sanitised, but only newly submitted data warrants a notice.
+  const redactions = safeInput.redactions;
+  const lastAssistant = safeHistory.messages.filter((item) => item.role === 'assistant').at(-1)?.content || '';
+  const contactProvided = redactions.some((label) => ['phone number', 'email address'].includes(label));
+  const callbackRequested = /\b(call me|call back|callback|speak to (?:a |an )?(?:human|adviser|advisor)|request a callback|book (?:a |the )?(?:free )?consultation)\b/i.test(safeInput.text);
+  const acceptsCallback = /^(yes|yes please|please do|sure|okay|ok)[.! ]*$/i.test(safeInput.text) &&
+    /\b(callback|call you|consultation|name and phone|name and number)\b/i.test(lastAssistant);
+  if (contactProvided || callbackRequested || acceptsCallback) {
+    return {
+      sessionId: id,
+      text: 'Please complete the callback form below and select **Request a callback** to send your details to our team. A chat message alone does not submit a callback request.',
+      handoffRecommended: true,
+      redactions,
+      safeInput: safeInput.text,
+      provider: 'callback_form',
+      model: null
+    };
+  }
   const confirmedAnswer = confirmedBusinessAnswer(safeInput.text);
 
   if (confirmedAnswer) {
@@ -94,12 +112,12 @@ async function answerUser({ message, history, sessionId }) {
       { role: 'system', content: SYSTEM_PROMPT },
       ...safeHistory.messages,
       { role: 'user', content: safeInput.text }
-    ], { temperature: 0.15, maxTokens: 420, totalTimeoutMs: 22_000 });
+    ], { temperature: 0.15, maxTokens: 2_048, totalTimeoutMs: 22_000 });
 
     return {
       sessionId: id,
       text: result.text,
-      handoffRecommended: result.text.includes('requires confirmation from a Rogernort adviser'),
+      handoffRecommended: /requires confirmation from a Rogernort adviser|callback form/i.test(result.text),
       redactions,
       safeInput: safeInput.text,
       provider: result.provider,

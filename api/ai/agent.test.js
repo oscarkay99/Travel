@@ -86,4 +86,59 @@ test('does not invent an account number or programme cost breakdown', async () =
   assert.equal(account.handoffRecommended, true);
   assert.equal(breakdown.handoffRecommended, true);
 });
+
+test('passport requirement words are not treated as identity numbers', () => {
+  const { redactSensitiveData } = require('./guardrails');
+  assert.deepEqual(redactSensitiveData('passport required for application').redactions, []);
+  assert.match(redactSensitiveData('passport number: G1234567').text, /REDACTED passport number/);
+});
+
+test('contact details open the callback form without pretending to save a lead', async () => {
+  global.fetch = async () => { throw new Error('Contact capture must not call the model'); };
+  const { answerUser } = require('./agent');
+  for (const message of ['Test Visitor 0200000000', 'Please call me', 'test@example.com']) {
+    const result = await answerUser({ message });
+    assert.equal(result.provider, 'callback_form');
+    assert.equal(result.handoffRecommended, true);
+    assert.match(result.text, /Request a callback/);
+    assert.match(result.text, /does not submit/);
+    assert.doesNotMatch(result.safeInput, /0200000000|test@example.com/);
+  }
+  const accepted = await answerUser({ message: 'Yes please', history: [
+    { role: 'assistant', content: 'Would you like to book a free consultation?' }
+  ] });
+  assert.equal(accepted.provider, 'callback_form');
+});
+
+test('historical contact details are redacted without repeating privacy notices', async () => {
+  let outbound;
+  global.fetch = async (_url, options) => {
+    outbound = options.body;
+    return { ok: true, json: async () => ({ candidates: [{ finishReason: 'STOP', content: { parts: [
+      { thought: true, text: 'Private model reasoning' },
+      { text: 'The office is at The Base, New-Legon, Adenta.' }
+    ] } }] }) };
+  };
+  const { answerUser } = require('./agent');
+  const result = await answerUser({ message: 'Where is the office?', history: [
+    { role: 'assistant', content: 'WhatsApp +233 55 949 9248' },
+    { role: 'user', content: 'Test Visitor 0200000000' }
+  ] });
+  assert.deepEqual(result.redactions, []);
+  assert.doesNotMatch(outbound, /0200000000/);
+  assert.match(outbound, /REDACTED phone number/);
+  assert.doesNotMatch(result.text, /Private model reasoning/);
+});
+
+test('never displays a provider response cut off by its token limit', async () => {
+  global.fetch = async () => ({ ok: true, json: async () => ({ candidates: [{
+    finishReason: 'MAX_TOKENS', content: { parts: [{ text: 'Thank you! A Rogern' }] }
+  }] }) });
+  const { answerUser } = require('./agent');
+  const result = await answerUser({ message: 'Tell me about your office' });
+  assert.equal(result.handoffRecommended, true);
+  assert.equal(result.provider, 'all_projects_unavailable');
+  assert.doesNotMatch(result.text, /Thank you! A Rogern/);
+});
+
 });
