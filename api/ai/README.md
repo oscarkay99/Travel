@@ -22,9 +22,20 @@ const answer = await generate([
 console.log(answer.text, answer.provider, answer.model);
 ```
 
-Models are attempted from left to right within each project. If all compatible
-models fail, that project enters a configurable cooldown and the router moves
-to the next configured project. If all five are unavailable,
+On the first request, models are attempted from left to right within each
+project. Later requests try the last successful project and model first,
+avoiding repeated discovery of a working route. Failed models are skipped for
+`AI_PROVIDER_COOLDOWN_MS` (60 seconds by default), then become eligible again.
+This routing state is held in memory per API process and resets on restart;
+customer answers are not cached.
+
+If all compatible models fail, that project enters the same cooldown and the
+router moves to the next configured project. Authentication failures and
+timeouts move directly to the next project without trying its remaining models.
+The overall AI request budget remains 22 seconds, including retries, with a
+default limit of 7 seconds per model attempt. These changes avoid repeat failure
+delays; they do not guarantee a particular live response time or stream text.
+If all five are unavailable,
 `AIProvidersExhaustedError` is raised so the application can serve verified FAQ
 content or transfer the conversation to a human adviser.
 

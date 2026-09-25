@@ -79,7 +79,7 @@ jobs:
 
             # Refuse deployment when the agent or browser scripts fail validation
             docker run --rm -v "$REPO_DIR:/work:ro" -w /work node:24-alpine3.23@sha256:838d276a37a1e42da2a5d01e0ecbb4401ca4147728f62ca2eba6d023a352f88f \
-              node --test api/ai/agent.test.js api/security.test.js deploy/seo.test.js
+              node --test api/ai/agent.test.js api/ai/router.test.js api/security.test.js deploy/seo.test.js
             docker run --rm -v "$REPO_DIR:/work:ro" -w /work node:24-alpine3.23@sha256:838d276a37a1e42da2a5d01e0ecbb4401ca4147728f62ca2eba6d023a352f88f \
               node --check api/server.js
             sh -n "$REPO_DIR/deploy/configure-aop.sh"

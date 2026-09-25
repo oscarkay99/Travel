@@ -3,6 +3,12 @@
 const { providers, providerOrder } = require('./providers');
 
 const providerState = new Map();
+const modelCooldowns = new Map();
+let lastSuccessfulRoute = null;
+
+function modelKey(providerName, model) {
+  return `${providerName}:${model}`;
+}
 
 class AIProvidersExhaustedError extends Error {
   constructor(attempts) {
@@ -131,7 +137,7 @@ async function callOpenAICompatible(provider, model, messages, options) {
       temperature: options.temperature ?? 0.2,
       max_tokens: options.maxTokens ?? 1_024
     })
-  }, provider.timeoutMs);
+  }, options.requestTimeoutMs || provider.timeoutMs);
 
   const choice = payload.choices?.[0];
   if (choice?.finish_reason && choice.finish_reason !== 'stop') {
@@ -158,7 +164,12 @@ async function generate(messages, options = {}) {
   const totalTimeoutMs = options.totalTimeoutMs || 22_000;
   const deadline = Date.now() + totalTimeoutMs;
 
-  providerLoop: for (const providerName of providerOrder) {
+  // Reuse the route that worked instead of rediscovering it on every message.
+  const orderedProviders = lastSuccessfulRoute
+    ? [lastSuccessfulRoute.provider, ...providerOrder.filter((name) => name !== lastSuccessfulRoute.provider)]
+    : providerOrder;
+
+  providerLoop: for (const providerName of orderedProviders) {
     const provider = providers[providerName];
 
     if (!provider.apiKey) {
@@ -170,7 +181,17 @@ async function generate(messages, options = {}) {
       continue;
     }
 
-    for (const model of provider.models) {
+    const preferredModel = lastSuccessfulRoute?.provider === providerName ? lastSuccessfulRoute.model : null;
+    const orderedModels = preferredModel
+      ? [preferredModel, ...provider.models.filter((model) => model !== preferredModel)]
+      : provider.models;
+
+    for (const model of orderedModels) {
+      const key = modelKey(providerName, model);
+      if ((modelCooldowns.get(key) || 0) > Date.now()) {
+        attempts.push({ provider: providerName, model, outcome: 'cooldown' });
+        continue;
+      }
       const remainingMs = deadline - Date.now();
       if (remainingMs < 250) break providerLoop;
       try {
@@ -179,8 +200,14 @@ async function generate(messages, options = {}) {
           requestTimeoutMs: Math.min(provider.timeoutMs, remainingMs)
         });
         recordSuccess(providerName);
+        modelCooldowns.delete(key);
+        lastSuccessfulRoute = { provider: providerName, model };
         return { ...result, provider: providerName, model, attempts };
       } catch (error) {
+        modelCooldowns.set(key, Date.now() + provider.cooldownMs);
+        if (lastSuccessfulRoute?.provider === providerName && lastSuccessfulRoute.model === model) {
+          lastSuccessfulRoute = null;
+        }
         attempts.push({
           provider: providerName,
           model,
@@ -188,6 +215,9 @@ async function generate(messages, options = {}) {
           status: error.status || null,
           retryAfter: error.retryAfter || null
         });
+        // Authentication failures affect the project; changing models cannot fix them.
+        // After a timeout, give another project a chance within the shared deadline.
+        if (error.status === 401 || error.status === 403 || error.name === 'AbortError') break;
       }
     }
 

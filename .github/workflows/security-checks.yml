@@ -21,7 +21,7 @@ jobs:
           node-version: 24
       - name: Validate agent, API, and browser security
         run: |
-          node --test api/ai/agent.test.js api/security.test.js
+          node --test api/ai/agent.test.js api/ai/router.test.js api/security.test.js
           node --check api/server.js
           sh -n deploy/configure-aop.sh
           sh -n deploy/check-seo.sh
