@@ -228,7 +228,7 @@
     <!-- 2 -->
     <div class="section" id="data-collected">
       <h2>2. What Data We Collect</h2>
-      <p>We collect information when you voluntarily submit an on-site form or send a message to our digital travel adviser.</p>
+      <p>We collect information when you voluntarily submit an on-site form, send a message to our digital travel adviser, or message or comment on our TikTok account.</p>
 
       <h3>Work Abroad Application Form</h3>
       <table class="data-table">
@@ -272,6 +272,20 @@
         </tbody>
       </table>
 
+      <h3>TikTok Messages and Comments</h3>
+      <p>Our TikTok account, <strong>@rogernort.travelandtour</strong>, uses the same digital adviser to answer direct messages and comments on our videos.</p>
+      <table class="data-table">
+        <thead>
+          <tr><th>Data Point</th><th>Required?</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Direct messages you send us</td><td>Yes</td><td>Answering your travel or work-abroad question</td></tr>
+          <tr><td>Comments on our videos</td><td>No</td><td>Replying publicly to your question</td></tr>
+          <tr><td>TikTok username and account identifier (provided by TikTok)</td><td>Automatic</td><td>Keeping messages within the same conversation and avoiding repeat replies</td></tr>
+          <tr><td>Name, phone / WhatsApp number and destination</td><td>Only if you choose to share them</td><td>Passing your request to a Rogernort adviser who will contact you</td></tr>
+        </tbody>
+      </table>
+
       <p>Our forms and digital adviser do <strong>not</strong> request payment-card information, national ID numbers, passport numbers, biometric data or document uploads. Automated filters attempt to remove common phone, email, Ghana Card, passport and payment-card patterns before an adviser message is sent for AI processing, but no automated filter is perfect. Please do not enter sensitive information in the chat. We do not install tracking scripts or advertising pixels.</p>
     </div>
 
@@ -284,6 +298,7 @@
         <li><strong>Work Abroad applications:</strong> To assess eligibility and contact you about EU job placement opportunities. This is the primary purpose of the application form.</li>
         <li><strong>Trip enquiries:</strong> To follow up with a personalised travel proposal matching your stated destination and preferences.</li>
         <li><strong>Digital adviser:</strong> To answer questions using approved Rogernort information, protect the service from misuse and transfer unresolved questions to a human adviser.</li>
+        <li><strong>TikTok messages and comments:</strong> To answer you on TikTok using the same approved Rogernort information and, if you share your contact details in a direct message, to pass your request to an adviser.</li>
         <li><strong>WhatsApp communication:</strong> When you submit a form, a summary is also sent to our business WhatsApp number so our team can respond quickly.</li>
         <li><strong>Service improvement:</strong> Aggregated, anonymised data (e.g., which countries are most requested) may be reviewed to improve our services. This does not involve individual profiling.</li>
       </ul>
@@ -304,6 +319,7 @@
         <li>Application data is stored in a protected PostgreSQL database on the same VPS. Public website visitors cannot read submitted applications.</li>
       </ol>
       <p>When you use the digital adviser, the message is sent over HTTPS to our backend, automatically checked for common sensitive-data patterns, and then processed using Google's Gemini API. Only Rogernort information approved for public use is included as reference material. On Gemini's free tier, Google states that submitted content may be used to improve its products; for that reason, you must not use the adviser to send identity documents, financial details or other confidential information.</p>
+      <p>When you message or comment on our TikTok account, TikTok sends the message to our backend through the TikTok API for Business. Our digital adviser answers using the same process described above: phone numbers and other common sensitive-data patterns are removed before the message is sent to Google's Gemini API. If you share your name and phone or WhatsApp number in a direct message, our system saves them as an enquiry and emails them to our team. Staff can reply to you personally from the TikTok app at any time. Once a staff member replies in a conversation, the automatic adviser stops replying in that conversation permanently. Replies to comments are public, so the adviser never asks for or repeats personal details there. Please send them by direct message instead.</p>
       <p>Our server is hosted on Hostinger VPS infrastructure with Ubuntu 24.04 LTS. All connections to the site and API use HTTPS certificates from Let's Encrypt.</p>
     </div>
 
@@ -318,6 +334,7 @@
         <li><strong>Hosting infrastructure</strong> — Hostinger provides the server on which data may be temporarily or persistently stored.</li>
         <li><strong>Cloudflare</strong> — provides our CDN, network security and, when enabled, Turnstile bot verification. Turnstile processes limited browser and interaction signals needed to distinguish legitimate visitors from automated abuse.</li>
         <li><strong>Google Gemini API</strong> — processes redacted digital-adviser messages and generates responses, subject to Google's applicable terms and privacy notices.</li>
+        <li><strong>TikTok</strong> — delivers messages and comments you send to our TikTok account, and our replies to them. Your use of TikTok is governed by TikTok's own privacy policy.</li>
       </ul>
       <p>If you independently choose a WhatsApp link on this site, the information you send there is governed by WhatsApp/Meta's privacy terms. The providers listed here receive only the information needed to deliver their respective services.</p>
     </div>
@@ -335,6 +352,7 @@
         <li><strong>Completed or declined enquiries:</strong> Retained for up to <strong>24 months</strong> from the last contact, then deleted.</li>
         <li><strong>Email inbox copies:</strong> Subject to our email provider's standard retention. We review and purge old enquiries annually.</li>
         <li><strong>Digital-adviser conversations:</strong> Retained for service follow-up, safety review and quality improvement for no longer than the general 24-month enquiry period, unless earlier deletion is requested or longer retention is legally required.</li>
+        <li><strong>TikTok messages and comments:</strong> Our stored copies (with sensitive details removed) follow the same 24-month period. Messages kept inside TikTok itself are governed by TikTok's retention.</li>
       </ul>
       <p>You may request earlier deletion at any time (see <a href="#your-rights">Your Rights</a>).</p>
     </div>

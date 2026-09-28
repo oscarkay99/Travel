@@ -4,6 +4,8 @@ const http = require('http');
 const https = require('https');
 const crypto = require('crypto');
 const { answerUser } = require('./ai/agent');
+const tiktokAssistant = require('./tiktok/assistant');
+const { createStore: createTikTokStore } = require('./tiktok/store');
 const {
   HttpError, allowedOrigin, enforceOrigin, clientIp, subjectHash,
   assertPlainObject, validateEnquiry, validateApplication, validateAgentLead, validateChat,
@@ -21,7 +23,8 @@ const localRateLimits = new Map();
 
 const ROUTES = new Set([
   '/api/agent/status', '/api/public-config', '/api/content',
-  '/api/agent/chat', '/api/agent/lead', '/api/enquire', '/api/apply'
+  '/api/agent/chat', '/api/agent/lead', '/api/enquire', '/api/apply',
+  '/api/tiktok/webhook', '/api/tiktok/callback'
 ]);
 
 const RATE_RULES = {
@@ -90,6 +93,29 @@ function readJson(req) {
       catch (error) {
         reject(error instanceof HttpError ? error : new HttpError(400, 'Malformed JSON request.', 'INVALID_JSON'));
       }
+    });
+  });
+}
+
+function readRawBody(req) {
+  const declaredLength = Number(req.headers['content-length']);
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES) {
+    throw new HttpError(413, 'Request body is too large.', 'BODY_TOO_LARGE');
+  }
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    let bytes = 0;
+    let tooLarge = false;
+    req.on('data', (chunk) => {
+      bytes += chunk.length;
+      if (bytes > MAX_BODY_BYTES) { tooLarge = true; return; }
+      chunks.push(chunk);
+    });
+    req.on('aborted', () => reject(new HttpError(400, 'Request was interrupted.', 'REQUEST_ABORTED')));
+    req.on('error', reject);
+    req.on('end', () => {
+      if (tooLarge) return reject(new HttpError(413, 'Request body is too large.', 'BODY_TOO_LARGE'));
+      resolve(Buffer.concat(chunks).toString('utf8'));
     });
   });
 }
@@ -286,12 +312,13 @@ function sendLeadEmail(lead) {
     interest: htmlEscape(lead.interest || 'AI Concierge chat'),
     summary: htmlEscape(lead.summary || '')
   };
+  const origin = lead.origin === 'TikTok' ? 'TikTok' : 'AI Concierge';
   const whatsappNumber = lead.phone.replace(/\D/g, '').replace(/^0/, '233');
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#f4f6fb;padding:32px;">
       <div style="background:#142449;border-radius:12px;padding:28px 32px;margin-bottom:24px;">
-        <h1 style="color:#fff;margin:0;font-size:22px;">New Lead: AI Concierge</h1>
-        <p style="color:#c9a24b;margin:6px 0 0;font-size:14px;">Captured from rogernortconsult.com chat</p>
+        <h1 style="color:#fff;margin:0;font-size:22px;">New Lead: ${origin}</h1>
+        <p style="color:#c9a24b;margin:6px 0 0;font-size:14px;">Captured from ${origin === 'TikTok' ? 'the Rogernort TikTok assistant' : 'rogernortconsult.com chat'}</p>
       </div>
       <div style="background:#fff;border-radius:12px;padding:28px 32px;border:1px solid #e5decb;">
         <table style="width:100%;border-collapse:collapse;">
@@ -307,7 +334,7 @@ function sendLeadEmail(lead) {
   const payload = JSON.stringify({
     from: 'Rogernort Concierge <onboarding@resend.dev>',
     to: [TO_EMAIL],
-    subject: safeHeaderText(`New concierge lead: ${lead.name}`),
+    subject: safeHeaderText(`New ${origin === 'TikTok' ? 'TikTok' : 'concierge'} lead: ${lead.name}`),
     html
   });
   return new Promise((resolve, reject) => {
@@ -342,6 +369,83 @@ async function getPublicContent() {
   };
 }
 
+async function saveTikTokLead(lead) {
+  const row = {
+    id: crypto.randomUUID(),
+    name: lead.name,
+    phone: lead.phone,
+    interest: lead.interest,
+    source: 'tiktok',
+    status: 'hot',
+    notes: ['Captured by the Rogernort TikTok assistant', lead.summary].filter(Boolean).join('\n\n'),
+    created_at: new Date().toISOString().slice(0, 10)
+  };
+  try {
+    await supaInsert('leads', row);
+  } catch (error) {
+    // 23514: the leads.source check constraint may predate TikTok as a source.
+    if (error.upstreamCode !== '23514') throw error;
+    securityEvent('tiktok_lead_source_fallback', {});
+    await supaInsert('leads', { ...row, id: crypto.randomUUID(), source: 'website', notes: `Source: TikTok\n\n${row.notes}` });
+  }
+}
+
+const tiktok = tiktokAssistant.createTikTokAssistant({
+  store: createTikTokStore(supaRequest),
+  saveLead: saveTikTokLead,
+  notifyLead: sendLeadEmail,
+  log: (event, context) => securityEvent(event, context)
+});
+
+function sendHtml(res, status, title, message) {
+  if (res.writableEnded) return;
+  res.writeHead(status, { 'Content-Type': 'text/html; charset=utf-8' });
+  res.end(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${htmlEscape(title)}</title></head><body><h1>${htmlEscape(title)}</h1><p>${htmlEscape(message)}</p></body></html>`);
+}
+
+async function handleTikTok(req, res, url, requestId) {
+  if (!tiktokAssistant.isConfigured()) {
+    return sendJson(res, 503, { ok: false, error: 'TikTok integration is not configured.', requestId });
+  }
+  const { appSecret } = tiktokAssistant.config();
+
+  if (url.pathname === '/api/tiktok/callback') {
+    if (req.method !== 'GET') return sendJson(res, 405, { ok: false, error: 'Method not allowed', requestId }, { Allow: 'GET' });
+    const code = url.searchParams.get('code');
+    if (url.searchParams.get('error') || !code) {
+      return sendHtml(res, 400, 'TikTok was not connected', 'Authorisation was cancelled or refused. Ask your developer for a new connect link.');
+    }
+    if (!tiktokAssistant.verifyState(url.searchParams.get('state'), appSecret)) {
+      securityEvent('tiktok_invalid_oauth_state', { requestId });
+      return sendHtml(res, 400, 'Link expired', 'This connect link is invalid or has expired. Ask your developer for a new one.');
+    }
+    try {
+      const account = await tiktok.connectAccount(code.slice(0, 512));
+      securityEvent('tiktok_account_connected', { requestId, username: account.username });
+      return sendHtml(res, 200, 'TikTok connected', `The Rogernort assistant is now linked to ${account.username ? `@${account.username}` : 'your TikTok account'}. You can close this page.`);
+    } catch (error) {
+      console.error(JSON.stringify({ level: 'error', event: 'tiktok_connect_failed', requestId, message: String(error.message).slice(0, 200) }));
+      return sendHtml(res, 502, 'TikTok was not connected', 'TikTok did not accept the connection. Please try again with a new link.');
+    }
+  }
+
+  if (req.method !== 'POST') return sendJson(res, 405, { ok: false, error: 'Method not allowed', requestId }, { Allow: 'POST' });
+  const rawBody = await readRawBody(req);
+  if (!tiktokAssistant.verifySignature(req.headers['tiktok-signature'], rawBody, appSecret)) {
+    securityEvent('tiktok_invalid_signature', { requestId });
+    return sendJson(res, 401, { ok: false, error: 'Invalid signature.', requestId });
+  }
+  let event;
+  try { event = JSON.parse(rawBody); }
+  catch (_) { return sendJson(res, 200, { ok: true }); }
+  // Acknowledge at once: TikTok retries slow or failed deliveries, and replies
+  // are de-duplicated by message and comment id.
+  sendJson(res, 200, { ok: true });
+  tiktok.handleEvent(event).catch((error) => {
+    console.error(JSON.stringify({ level: 'error', event: 'tiktok_event_failed', requestId, message: String(error.message).slice(0, 200) }));
+  });
+}
+
 async function handleRequest(req, res) {
   const requestId = crypto.randomUUID();
   setApiHeaders(req, res, requestId);
@@ -349,6 +453,7 @@ async function handleRequest(req, res) {
   const path = url.pathname;
   try {
     if (!ROUTES.has(path)) return sendJson(res, 404, { ok: false, error: 'Not found', requestId });
+    if (path.startsWith('/api/tiktok/')) return await handleTikTok(req, res, url, requestId);
     if (req.method === 'OPTIONS') {
       if (req.headers.origin && !allowedOrigin(req.headers.origin)) {
         throw new HttpError(403, 'Request origin is not allowed.', 'ORIGIN_DENIED');
@@ -517,4 +622,4 @@ setInterval(() => {
 
 if (require.main === module) server.listen(PORT, () => console.log(`API running on port ${PORT}`));
 
-module.exports = { server, handleRequest, readJson, sendApplicationEmail };
+module.exports = { server, handleRequest, readJson, sendApplicationEmail, supaRequest };

@@ -58,12 +58,14 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
           RATE_LIMIT_HASH_SECRET: ${{ secrets.RATE_LIMIT_HASH_SECRET }}
+          TIKTOK_APP_ID: ${{ secrets.TIKTOK_APP_ID }}
+          TIKTOK_APP_SECRET: ${{ secrets.TIKTOK_APP_SECRET }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: root
           key: ${{ secrets.VPS_SSH_KEY }}
           command_timeout: 5m
-          envs: GEMINI_API_KEY_1,GEMINI_API_KEY_2,GEMINI_API_KEY_3,GEMINI_API_KEY_4,GEMINI_API_KEY_5,TURNSTILE_SITE_KEY,TURNSTILE_SECRET_KEY,RATE_LIMIT_HASH_SECRET,CLOUDFLARE_API_TOKEN,CLOUDFLARE_ZONE_ID
+          envs: GEMINI_API_KEY_1,GEMINI_API_KEY_2,GEMINI_API_KEY_3,GEMINI_API_KEY_4,GEMINI_API_KEY_5,TURNSTILE_SITE_KEY,TURNSTILE_SECRET_KEY,RATE_LIMIT_HASH_SECRET,CLOUDFLARE_API_TOKEN,CLOUDFLARE_ZONE_ID,TIKTOK_APP_ID,TIKTOK_APP_SECRET
           script: |
             set -e
 
@@ -79,9 +81,9 @@ jobs:
 
             # Refuse deployment when the agent or browser scripts fail validation
             docker run --rm -v "$REPO_DIR:/work:ro" -w /work node:24-alpine3.23@sha256:838d276a37a1e42da2a5d01e0ecbb4401ca4147728f62ca2eba6d023a352f88f \
-              node --test api/ai/agent.test.js api/ai/router.test.js api/security.test.js deploy/seo.test.js
+              node --test api/ai/agent.test.js api/ai/router.test.js api/tiktok/tiktok.test.js api/security.test.js deploy/seo.test.js
             docker run --rm -v "$REPO_DIR:/work:ro" -w /work node:24-alpine3.23@sha256:838d276a37a1e42da2a5d01e0ecbb4401ca4147728f62ca2eba6d023a352f88f \
-              node --check api/server.js
+              sh -c 'node --check api/server.js && node --check api/tiktok/cli.js'
             sh -n "$REPO_DIR/deploy/configure-aop.sh"
             sh -n "$REPO_DIR/deploy/check-seo.sh"
 
@@ -128,8 +130,8 @@ jobs:
 
             # Inject Supabase service key from VPS .env into override file (key never touches git)
             SUPA_KEY=$(grep '^SERVICE_ROLE_KEY=' /opt/rogernort/supabase/.env | cut -d= -f2-)
-            printf 'services:\n  api:\n    environment:\n      - NODE_ENV=production\n      - SUPA_URL=http://rogernort-kong:8000\n      - SUPA_SERVICE_KEY=%s\n      - RATE_LIMIT_HASH_SECRET=%s\n      - TURNSTILE_SITE_KEY=%s\n      - TURNSTILE_SECRET_KEY=%s\n      - GEMINI_API_KEY_1=%s\n      - GEMINI_API_KEY_2=%s\n      - GEMINI_API_KEY_3=%s\n      - GEMINI_API_KEY_4=%s\n      - GEMINI_API_KEY_5=%s\n' \
-              "$SUPA_KEY" "$RATE_LIMIT_HASH_SECRET" "$TURNSTILE_SITE_KEY" "$TURNSTILE_SECRET_KEY" "$GEMINI_API_KEY_1" "$GEMINI_API_KEY_2" "$GEMINI_API_KEY_3" "$GEMINI_API_KEY_4" "$GEMINI_API_KEY_5" \
+            printf 'services:\n  api:\n    environment:\n      - NODE_ENV=production\n      - SUPA_URL=http://rogernort-kong:8000\n      - SUPA_SERVICE_KEY=%s\n      - RATE_LIMIT_HASH_SECRET=%s\n      - TURNSTILE_SITE_KEY=%s\n      - TURNSTILE_SECRET_KEY=%s\n      - GEMINI_API_KEY_1=%s\n      - GEMINI_API_KEY_2=%s\n      - GEMINI_API_KEY_3=%s\n      - GEMINI_API_KEY_4=%s\n      - GEMINI_API_KEY_5=%s\n      - TIKTOK_APP_ID=%s\n      - TIKTOK_APP_SECRET=%s\n' \
+              "$SUPA_KEY" "$RATE_LIMIT_HASH_SECRET" "$TURNSTILE_SITE_KEY" "$TURNSTILE_SECRET_KEY" "$GEMINI_API_KEY_1" "$GEMINI_API_KEY_2" "$GEMINI_API_KEY_3" "$GEMINI_API_KEY_4" "$GEMINI_API_KEY_5" "$TIKTOK_APP_ID" "$TIKTOK_APP_SECRET" \
               > /opt/rogernort/docker-compose.override.yml
             chmod 600 /opt/rogernort/docker-compose.override.yml
 
@@ -242,6 +244,16 @@ jobs:
               -H 'Origin: https://rogernortconsult.com' \
               --data '{"message":"Where is your office and when are you open?"}')
             echo "$CHAT_JSON" | grep -q '"ok":true'
+
+            # TikTok must reach the webhook through Cloudflare. An unsigned probe
+            # should get the API's own 401 (or 503 before the app is configured).
+            TIKTOK_STATUS=$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
+              https://rogernortconsult.com/api/tiktok/webhook \
+              -H 'Content-Type: application/json' --data '{}' || true)
+            case "$TIKTOK_STATUS" in
+              401|503) echo "TikTok webhook route reachable (HTTP $TIKTOK_STATUS)" ;;
+              *) echo "::warning::TikTok webhook route returned HTTP $TIKTOK_STATUS; check Cloudflare rules" ;;
+            esac
 
             curl -fsSI https://rogernortconsult.com/ | grep -qi '^content-security-policy:'
             curl -fsSI https://rogernortconsult.com/ | grep -qi '^strict-transport-security:'
